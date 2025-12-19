@@ -1,11 +1,19 @@
 // ==========================================
-// MODO ONLINE (v15 - ARQUITECTURA SOCKET.IO)
+// MODO ONLINE (v16 - BLINDADO CON SEMÁFORO)
 // ==========================================
-const socket = io('https://impostor-server-gomita.onrender.com'); // Conexión automática al servidor
+
+// 1. CONFIGURACIÓN DE CONEXIÓN ROBUSTA
+const SERVER_URL = 'https://impostor-server-gomitaexe.onrender.com'; 
+const socket = io(SERVER_URL, {
+    transports: ['websocket', 'polling'], // Fuerza la mejor conexión posible
+    reconnection: true
+});
+
 var myRoomCode = "";
 var myName = "";
 var isHost = false;
 var oPlayers = [];
+var isConnected = false; // Variable para saber si estamos online
 
 // Configuración del Juego
 var oSettings = {
@@ -21,11 +29,45 @@ var activeWordData = null;
 var oGuessesLeft = 1; 
 var oImpHistory = JSON.parse(localStorage.getItem('o_imp_v7_history') || '{}');
 
+// --- EL SEMÁFORO (Diagnóstico Visual) ---
+
+socket.on('connect', () => {
+    isConnected = true;
+    console.log("✅ CONECTADO AL SERVIDOR:", socket.id);
+    updateStatus("🟢 ONLINE (Conectado)", "text-green-400");
+});
+
+socket.on('connect_error', (err) => {
+    isConnected = false;
+    console.error("❌ ERROR DE CONEXIÓN:", err);
+    updateStatus("🔴 ERROR DE CONEXIÓN (Render durmiendo...)", "text-red-500");
+});
+
+socket.on('disconnect', () => {
+    isConnected = false;
+    updateStatus("🔴 DESCONECTADO", "text-red-500");
+});
+
+// Función para mostrar la barrita de estado arriba
+function updateStatus(msg, colorClass) {
+    let el = document.getElementById('debug-status');
+    if(!el) {
+        let div = document.createElement('div');
+        div.id = 'debug-status';
+        div.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none";
+        document.body.appendChild(div);
+        el = div;
+    }
+    el.innerText = msg;
+    el.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none " + colorClass;
+}
+
 // --- LÓGICA DE CONEXIÓN ---
 
 // Escuchar mensajes del Servidor
 socket.on('GAME_EVENT', (data) => {
-    // data llega como { type: '...', payload: '...' }
+    // Debug log para ver qué llega
+    // console.log("📨 LLEGÓ:", data.type); 
     if (isHost) handleHostLogic(data);
     else handleClientLogic(data);
 });
@@ -33,6 +75,8 @@ socket.on('GAME_EVENT', (data) => {
 function goToOnline() { showScreen('online-menu'); }
 
 function createRoom() {
+    if(!isConnected) return showSystemMessage("Error", "Esperá que se ponga VERDE 🟢 el estado arriba.");
+
     myName = document.getElementById('online-name').value.trim();
     if(!myName) return showSystemMessage("Error", "¡Ponete un nombre!");
     
@@ -52,9 +96,12 @@ function createRoom() {
     document.getElementById('lobby-code').innerText = myRoomCode;
     renderOLobby();
     enableHost(true);
+    document.getElementById('online-status').innerText = "Esperando jugadores...";
 }
 
 function joinRoom() {
+    if(!isConnected) return showSystemMessage("Error", "Sin conexión. Esperá el VERDE 🟢.");
+
     myName = document.getElementById('online-name').value.trim();
     var code = document.getElementById('online-code').value.trim();
     if(!myName || !code) return showSystemMessage("Error", "Faltan datos.");
@@ -63,21 +110,40 @@ function joinRoom() {
     window.isHost = false;
     myRoomCode = code;
     
-    // Unirse a la sala
-    socket.emit('JOIN_ROOM', myRoomCode);
-    
-    // Avisar al Host que llegué
-    sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
-    
+    console.log("Intentando unirse a sala:", myRoomCode);
+
     showScreen('online-lobby');
     document.getElementById('lobby-code').innerText = myRoomCode;
     enableHost(false);
-    document.getElementById('online-status').innerText = "Esperando al host...";
+    document.getElementById('online-status').innerText = "Estableciendo conexión...";
+    document.getElementById('online-player-list').innerHTML = "<li>Conectando...</li>";
+
+    // 1. Unirse a la sala (físicamente en el server)
+    socket.emit('JOIN_ROOM', myRoomCode);
+
+    // 2. EL TRUCO DEL RETRASO (DOBLE CHECK)
+    // Esperamos 1.5s para asegurarnos que Socket.io nos metió en la sala
+    setTimeout(() => {
+        console.log("Primer intento de saludo...");
+        document.getElementById('online-status').innerText = "Saludando al host...";
+        
+        // Primer intento de avisar que llegué
+        sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
+
+        // SEGUNDO INTENTO (Seguro de vida)
+        // Si en 3 segundos sigo solo (oPlayers vacío), toco la puerta de nuevo
+        setTimeout(() => {
+            if(oPlayers.length === 0) {
+                console.log("Reintentando saludo...");
+                sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
+            }
+        }, 2500);
+
+    }, 1500);
 }
 
 // Función para enviar datos (Reemplaza al 'broadcast' viejo)
 function broadcast(msgObj) {
-    // Envia al servidor, el servidor reparte a la sala
     socket.emit('GAME_EVENT', {
         room: myRoomCode,
         type: msgObj.type,
@@ -85,9 +151,7 @@ function broadcast(msgObj) {
     });
 }
 
-// Función para enviar solo al Host (desde cliente)
 function sendToHost(msgObj) {
-    // En esta arquitectura simple, mandamos a todos y el Host filtra
     broadcast(msgObj);
 }
 
@@ -103,6 +167,11 @@ function handleHostLogic(d) {
             if (!existing) {
                 oPlayers.push({ id: d.payload.id, name: d.payload.name, isHost: false, alive: true });
                 updateLobbyAndSync();
+                // Feedback visual para el host
+                showSystemMessage("Info", d.payload.name + " se unió."); 
+            } else {
+                // Si ya existe (por el reintento), le mandamos la info de nuevo para que se sincronice
+                updateLobbyAndSync();
             }
         }
     }
@@ -110,7 +179,6 @@ function handleHostLogic(d) {
         if (oPlayers[oTurnOrder[oTurnIdx]].id === d.payload.fromId) hostNextTurn();
     }
     else if (d.type === 'CHAT_MSG') {
-        // Reenviar a todos para que lo vean
         broadcast({ type: 'SHOW_CHAT', payload: d.payload });
         showOnlineOverlay(d.payload.text, d.payload.author, d.payload.dur);
     }
@@ -120,6 +188,19 @@ function handleHostLogic(d) {
     else if (d.type === 'VOTE') {
         hostProcessVote(d.payload.fromId, d.payload.targetId);
     }
+    else if (d.type === 'USER_LEFT') {
+    var leftId = d.payload;
+    // Buscamos quién era
+    var p = oPlayers.find(x => x.id === leftId);
+    if (p) {
+        showSystemMessage("Info", p.name + " se desconectó.");
+        
+        oPlayers = oPlayers.filter(x => x.id !== leftId);
+        updateLobbyAndSync();
+
+        adjOnlineImp(0);
+    }
+}
 }
 
 function updateLobbyAndSync() {
@@ -133,9 +214,12 @@ function updateLobbyAndSync() {
 // --- LÓGICA DEL CLIENTE (Pantalla) ---
 
 function handleClientLogic(d) {
+    // console.log("CLIENTE RECIBIÓ:", d.type); 
     if (d.type === 'LOBBY_UPDATE') {
-        oPlayers = d.payload; // Actualizar lista local
+        oPlayers = d.payload; 
         renderCLobby(oPlayers);
+        // Si recibo update, es que ya me vieron
+        document.getElementById('online-status').innerText = "Conectado al Lobby";
     }
     else if (d.type === 'SYNC') {
         updateClientSettings(d.payload);
@@ -185,6 +269,7 @@ function handleClientLogic(d) {
 }
 
 // --- FUNCIONES DEL JUEGO (HOST) ---
+// (Estas no cambiaron, son las mismas que me pasaste)
 
 function startOnlineGame() {
     if(oPlayers.length < 3) return showSystemMessage("Error", "Mínimo 3 jugadores");
@@ -195,46 +280,21 @@ function startOnlineGame() {
     var cantPistas = oSettings.hintsOn ? oSettings.hintsCount : 0;
     activeWordData = getSafeWordObj(rawItem, cantPistas); 
 
-    // Asignar Roles
     var roles = new Array(oPlayers.length).fill('civil');
     var idxs = Array.from({length:oPlayers.length}, (_,i)=>i);
     
-    // (Lógica de Balance simplificada para Socket)
     idxs.sort(() => Math.random()-0.5);
     for(var i=0; i<oSettings.imps; i++) roles[idxs[i]]='impostor';
 
-    // Orden de turnos
     var startIdx = Math.floor(Math.random()*oPlayers.length);
     oTurnOrder = [];
     for(let i=0; i<oPlayers.length; i++) oTurnOrder.push((startIdx+i)%oPlayers.length);
     oTurnIdx = -1; 
 
-    // Repartir cartas
     oPlayers.forEach((p, i) => {
         p.role = roles[i]; p.alive = true; p.hasVoted = false;
     });
     
-    // Enviar info privada a cada uno (Iteramos y mandamos individualmente por si acaso, o filtrado en cliente)
-    // En esta versión simple, mandamos un evento START global, pero con el array de datos
-    // Para seguridad real, deberíamos mandar mensajes privados, pero para jugar con amigos:
-    // Mandamos a cada socket ID su info.
-    oPlayers.forEach(p => {
-        var load = {
-            role: p.role, 
-            word: p.role==='impostor' ? '???' : activeWordData.name, 
-            hints: activeWordData.hints,
-            players: oPlayers,
-            settings: oSettings,
-            myId: p.id // Para que el cliente sepa quién es
-        };
-        // Hack: Usamos el sistema de broadcast pero el cliente filtra si es para él
-        // Mejor: Usar socket.to(id) en el servidor, pero acá estamos emulando.
-        // Vamos a mandar a TODOS y que el cliente renderice lo suyo.
-    });
-    
-    // Broadcast GENERAL de inicio (Cada cliente decide qué mostrar según su ID)
-    // Pasamos un mapa de roles { idSocket: 'rol', ... } NO SEGURO pero FÁCIL
-    // Pasamos mapa de palabras { idSocket: 'palabra' ... }
     var gameMap = {};
     oPlayers.forEach(p => {
         gameMap[p.id] = {
@@ -298,7 +358,6 @@ function hostPhase(phase, isTie) {
 }
 
 function hostProcessVote(voterId, targetId) {
-    // Validar turno
     var currentActor = oPlayers[oTurnOrder[oTurnIdx]];
     if(currentActor.id !== voterId) return;
 
@@ -365,9 +424,6 @@ function hostCheckGuess(impId, word) {
         if(oGuessesLeft > 0) msg += "Te quedan " + oGuessesLeft + " intentos.";
         else msg += "Sin intentos restantes.";
         
-        // Enviar solo al impostor
-        // (En esta version simplificada mandamos broadcast con targetID oculto)
-        // O simplemente mostramos toast general "Impostor falló"
         broadcast({type:'MSG', payload: "El Impostor falló al adivinar."});
         
         if(oGuessesLeft <= 0) { 
@@ -381,9 +437,8 @@ function hostCheckGuess(impId, word) {
 function renderOGame(payload) {
     showScreen('online-game');
     
-    // Obtener mis datos del mapa global
     var myData = payload.map[socket.id];
-    if(!myData) return; // Error raro
+    if(!myData) return; 
     
     if(!isHost) {
         oSettings = payload.settings;
@@ -467,8 +522,6 @@ function sendOnlineMessage() {
     if(!txt) return; 
     var dur = Math.min(5000, 1000 + (txt.length * 100));
     var msgData = { text: txt, author: myName, dur: dur }; 
-    
-    // Broadcast a todos
     broadcast({type:'CHAT_MSG', payload: msgData}); 
     setTimeout(onlineSkipTurn, 200); 
     inp.value = ""; 
@@ -486,7 +539,6 @@ function onlineVote(targetId) {
     }); 
 }
 
-// Adivinar
 var oGuessing = false;
 function toggleOnlineGuess() {
     oGuessing = !oGuessing;
@@ -515,7 +567,7 @@ function confirmOnlineGuessFromModal(val) {
     toggleOnlineGuess();
 }
 
-// Sync Controls
+// Sync Controls & Misc
 function syncSettings() {
     if(!isHost) return;
     oSettings.cat = document.getElementById('online-cat-select').value;
@@ -558,7 +610,6 @@ function updateClientSettings(s){
     toggleOnlinePanel('balanced'); toggleOnlinePanel('guess');
 }
 
-// Misc
 function enableHost(en) { 
     var c=document.getElementById('host-controls'), i=c.querySelectorAll('input,select,button'); 
     i.forEach(e=>{e.disabled=!en;e.classList.toggle('disabled-input',!en)}); 

@@ -7,35 +7,44 @@ const io = require('socket.io')(http, {
         methods: ["GET", "POST"]
     }
 });
-const path = require('path');
 
-// 1. Servir los archivos de tu juego (HTML, CSS, JS)
-app.use(express.static(__dirname));
+app.use(express.static('public'));
 
-// 2. Lógica de Conexión (El "Árbitro")
+// Diccionario para saber en qué sala está cada socket (Para manejar desconexiones)
+let socketRooms = {};
+
 io.on('connection', (socket) => {
-    console.log('jugador conectado:', socket.id);
+    console.log('Cliente conectado:', socket.id);
 
-    // Cuando alguien crea o se une a una sala
     socket.on('JOIN_ROOM', (roomCode) => {
         socket.join(roomCode);
-        console.log(`Jugador ${socket.id} se unió a la sala: ${roomCode}`);
+        socketRooms[socket.id] = roomCode; // Guardamos dónde está
+        console.log(`Socket ${socket.id} se unió a sala ${roomCode}`);
     });
 
-    // Reenviar cualquier mensaje a los demás en la sala (Puente)
     socket.on('GAME_EVENT', (data) => {
-        // data trae: { room: 'CODIGO', type: 'TIPO_MSG', payload: 'DATOS' }
-        // Se lo mandamos a todos en la sala MENOS al que lo envió
-        socket.to(data.room).emit('GAME_EVENT', data);
+        // IMPORTANTE: Usamos io.to() para que le llegue A TODOS (incluido al que envió)
+        // Esto arregla que el Host se quede tildado.
+        io.to(data.room).emit('GAME_EVENT', data);
     });
 
     socket.on('disconnect', () => {
-        console.log('Jugador desconectado:', socket.id);
+        console.log('Cliente desconectado:', socket.id);
+        // Buscar en qué sala estaba
+        const room = socketRooms[socket.id];
+        if (room) {
+            // Avisar a la sala que este usuario se fue
+            io.to(room).emit('GAME_EVENT', {
+                type: 'USER_LEFT',
+                payload: socket.id
+            });
+            // Borrar registro
+            delete socketRooms[socket.id];
+        }
     });
 });
 
-// 3. Encender el servidor en el puerto 3000
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
-    console.log(`✅ SERVIDOR CORRIENDO EN: http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
