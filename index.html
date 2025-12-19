@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Impostor: Ultimate</title>
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="../CSS/animations.css">
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <header class="w-full max-w-md text-center mb-6 z-10">
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 tracking-wider digital-font drop-shadow-lg">EL IMPOSTOR</h1>
+    </header>
+
+    <section id="main-menu" class="w-full max-w-md space-y-4 fade-in">
+        
+        <div onclick="goToLocal()" class="menu-card bg-slate-800 p-6 rounded-2xl shadow-xl cursor-pointer hover:bg-slate-750 relative overflow-hidden group">
+            
+            <div class="absolute right-4 top-4 w-12 h-20 border-2 border-slate-600 rounded-lg bg-slate-900 group-hover:border-cyan-400 transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(34,211,238,0.6)] flex flex-col items-center overflow-hidden">
+                
+                <div class="absolute top-0 w-4 h-1 bg-slate-600 rounded-b-sm z-10"></div>
+
+                <div class="w-full h-full p-1 flex flex-col justify-center gap-1 relative">
+                    
+                    <div class="absolute inset-0 bg-green-500 z-20 opacity-0 mini-win-screen flex items-center justify-center">
+                        <div class="text-white text-[10px] font-bold">✓</div>
+                    </div>
+
+                    <div class="w-full h-3 bg-slate-700 rounded-sm mini-player p1 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 h-full w-1 bg-green-500 mini-role"></div>
+                    </div>
+
+                    <div class="w-full h-3 bg-slate-700 rounded-sm mini-player p2 imp relative overflow-hidden">
+                        <div class="absolute left-0 top-0 h-full w-1 bg-red-500 mini-role"></div>
+                        <div class="absolute right-1 top-0 bottom-0 my-auto text-[8px] opacity-0 mini-vote">👈</div>
+                    </div>
+
+                    <div class="w-full h-3 bg-slate-700 rounded-sm mini-player p3 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 h-full w-1 bg-green-500 mini-role"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-cyan-400 uppercase mb-1 mt-2">Modo Local</h2>
+            <p class="text-slate-400 text-sm w-2/3">Un solo teléfono.</p>
+        </div>
+
+        <div onclick="goToOnline()" class="menu-card bg-slate-800 p-6 rounded-2xl shadow-xl cursor-pointer hover:bg-slate-750 relative overflow-hidden group">
+            
+            <div class="absolute right-4 top-4 w-20 h-20 flex flex-col justify-between items-center py-2 transition-all duration-300">
+                
+                <div class="mini-pc pc-top relative z-10">
+                    <div class="mini-pc-screen w-8 h-5 bg-slate-950 border-2 border-slate-700 rounded-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-slate-900 group-hover:border-purple-500 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.6)]">
+                        
+                        <div class="w-4 h-1 bg-red-500 rounded-full pc-role-imp opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute text-red-500 font-bold text-[10px] pc-win-imp opacity-0 group-hover:opacity-100 transition-opacity duration-300">😈</div>
+                    
+                    </div>
+                    <div class="w-4 h-1 bg-slate-600 mx-auto rounded-b-sm"></div> 
+                </div>
+
+                <div class="absolute inset-0 z-0 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div class="w-12 h-10 border-l-2 border-r-2 border-b-2 border-slate-700/50 absolute top-6"></div>
+                </div>
+
+                <div class="flex gap-4 w-full justify-center relative z-10">
+                    
+                    <div class="mini-pc pc-left">
+                        <div class="mini-pc-screen w-8 h-5 bg-slate-950 border-2 border-slate-700 rounded-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-slate-900 group-hover:border-purple-500 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                            
+                            <div class="w-4 h-1 bg-green-500 rounded-full pc-role-civ opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute text-red-500 font-bold text-[12px] pc-dead opacity-0 group-hover:opacity-100 transition-opacity duration-300">×</div>
+                        
+                        </div>
+                        <div class="w-4 h-1 bg-slate-600 mx-auto rounded-b-sm"></div>
+                    </div>
+
+                    <div class="mini-pc pc-right">
+                        <div class="mini-pc-screen w-8 h-5 bg-slate-950 border-2 border-slate-700 rounded-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-slate-900 group-hover:border-purple-500 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                            
+                            <div class="w-4 h-1 bg-green-500 rounded-full pc-role-civ opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute text-red-500 font-bold text-[12px] pc-dead opacity-0 group-hover:opacity-100 transition-opacity duration-300">×</div>
+                        
+                        </div>
+                        <div class="w-4 h-1 bg-slate-600 mx-auto rounded-b-sm"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-purple-400 uppercase mb-1 mt-2">Modo Online</h2>
+            <p class="text-slate-400 text-sm w-2/3">Multijugador a distancia.</p>
+        </div>
+
+        <div onclick="goToRules()" class="menu-card bg-slate-800 p-4 rounded-2xl shadow-xl cursor-pointer hover:bg-slate-750 relative overflow-hidden group flex items-center justify-between px-6">
+            <div class="relative z-10">
+                <h2 class="text-xl font-bold text-yellow-400 uppercase mb-1">Reglas</h2>
+                <p class="text-slate-400 text-xs">Aprende a jugar paso a paso.</p>
+            </div>
+            
+            <div class="relative w-16 h-16 transition-opacity">
+                
+                <div class="absolute inset-3 border-2 border-slate-600 bg-slate-800 rounded-md rotate-6"></div>
+
+                <div class="absolute inset-3 border-2 border-slate-500 bg-slate-900 rounded-md top-page overflow-hidden flex flex-col justify-center gap-2 px-1.5 pt-1 transition-all duration-300 group-hover:border-yellow-400 group-hover:shadow-[0_0_15px_rgba(250,204,21,0.6)]">
+                    
+                    <div class="w-8 h-[2px] min-h-[2px] bg-yellow-400 rounded-full line-write lw-1"></div>
+                    <div class="w-6 h-[2px] min-h-[2px] bg-yellow-400 rounded-full line-write lw-2"></div>
+                    <div class="w-4 h-[2px] min-h-[2px] bg-yellow-400 rounded-full line-write lw-3"></div>
+                    
+                </div>
+
+                <div class="minimal-pen"></div>
+
+            </div>
+        </div>
+
+        <footer class="mt-8 pt-6 border-t border-slate-700/50 text-center">
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 backdrop-blur-sm">
+                <p class="text-slate-300 text-sm mb-4 leading-relaxed font-light">
+                    Soy <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 digital-font tracking-wide">GOMITA</span> y este es un proyecto personal.
+                    <br><br>
+                    <span class="text-xs text-slate-400">Si quieres apoyarme puedes seguirme en mis redes sociales o bien puedes donar lo que gustes para ayudarme a seguir creando este tipo de contenido.</span>
+                </p>
+                <div class="flex flex-col gap-3 justify-center items-center sm:flex-row">
+                    <a href="https://www.instagram.com/gomitaexe/" target="_blank" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg transition transform active:scale-95">
+                        <span>Seguir en IG</span> 
+                    </a>
+                    <button onclick="openDonation()" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white px-6 py-2 rounded-full font-bold text-xs shadow-lg transition transform active:scale-95">
+                        <span>Donar</span> 
+                    </button>
+                </div>
+                <p class="text-[10px] text-slate-600 mt-4 uppercase tracking-[0.2em]">❤ Muchas Gracias por jugar ❤</p>
+            </div>
+        </footer>
+        
+    </section>
+
+    <section id="local-setup" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 hidden fade-in">
+        <button onclick="showScreen('main-menu')" class="text-slate-500 text-sm mb-4">← Volver</button>
+        
+        <div class="mb-4">
+            <label class="block text-xs font-bold mb-1 text-yellow-400 uppercase">Categoría</label>
+            <select id="local-cat-select" onchange="checkLocalCustom()" class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white font-bold text-sm">
+                <option value="games">🎮 Videojuegos</option>
+                <option value="movies">🎬 Películas</option>
+                <option value="places">📍 Lugares</option>
+                <option value="football">⚽ Futbolistas</option>
+                <option value="custom">✏️ Personalizado</option>
+            </select>
+            <textarea id="local-custom-input" rows="2" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-xs text-white mt-2 hidden" placeholder="Palabras separadas por coma..."></textarea>
+        </div>
+
+        <label class="toggle-wrapper">
+            <span class="text-sm font-bold text-white">⏱️ Tiempo por Turno</span>
+            <input type="checkbox" id="local-time-switch" class="toggle-checkbox" onchange="toggleLocalPanel('time')" checked>
+            <span class="toggle-track"></span>
+        </label>
+        
+        <div id="local-time-panel" class="panel-collapsible open">
+            <div class="grid grid-cols-2 gap-3 bg-slate-900/50 p-3 rounded-lg">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase">Hablar (s)</label>
+                    <input type="number" id="local-time-discuss" value="30" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-center">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase">Votar (s)</label>
+                    <input type="number" id="local-time-vote" value="15" class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-center">
+                </div>
+            </div>
+        </div>
+
+        <label class="toggle-wrapper border-t border-slate-700 mt-2 pt-2">
+            <span class="text-sm font-bold text-white">⚖️ Impostor Equilibrado</span>
+            <input type="checkbox" id="local-balanced-switch" class="toggle-checkbox" onchange="toggleLocalPanel('balanced')">
+            <span class="toggle-track"></span>
+        </label>
+        
+        <div id="local-balanced-panel" class="panel-collapsible">
+            <div class="bg-slate-900/50 p-3 rounded-lg mt-2 border border-slate-600/50">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-[10px] text-slate-400 uppercase font-bold">Aumento por Ronda</label>
+                    <span id="local-balanced-val" class="text-yellow-400 font-bold text-sm">50%</span>
+                </div>
+                <input type="range" id="local-balanced-rate" min="10" max="100" step="10" value="50" 
+                       class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                       oninput="document.getElementById('local-balanced-val').innerText = this.value + '%'">
+                <p class="text-[10px] text-slate-500 mt-2 leading-tight">
+                    * Civil: Sube el %. <br>
+                    * Impostor: Baja 15% (1ª vez), 30% (2ª vez) o 50% (si tenías 100%). <br>
+                    * 3 veces seguidas = 0% chance.
+                </p>
+            </div>
+        </div>
+
+        <label class="toggle-wrapper border-t border-slate-700 mt-2 pt-2">
+            <span class="text-sm font-bold text-white">💡 Pistas para Impostor</span>
+            <input type="checkbox" id="local-hint-switch" class="toggle-checkbox" onchange="toggleLocalPanel('hint')">
+            <span class="toggle-track"></span>
+        </label>
+        
+        <div id="local-hint-panel" class="panel-collapsible">
+            <div class="bg-slate-900/50 p-3 rounded-lg mt-2">
+                <div id="local-standard-hints-config">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Cantidad</label>
+                        <span id="local-hint-val" class="text-yellow-400 font-bold text-lg">1</span>
+                    </div>
+                    <input type="range" id="local-hint-count" min="1" max="5" value="1" 
+                           class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                           oninput="document.getElementById('local-hint-val').innerText = this.value">
+                </div>
+                <div id="local-custom-hints-config" class="hidden space-y-2">
+                    <input type="text" class="custom-hint-input w-full bg-slate-800 border border-slate-600 rounded p-1 text-xs text-white" placeholder="Pista 1...">
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 mb-4 border-t border-slate-700 pt-4">
+            <div class="flex gap-2">
+                <input type="text" id="local-player-input" placeholder="Nombre..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white">
+                <button onclick="addLocalPlayer()" class="bg-cyan-600 text-white px-5 rounded-lg font-bold text-xl">+</button>
+            </div>
+            <ul id="local-player-list" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></ul>
+        </div>
+        
+        <div class="flex justify-between items-center bg-slate-900 p-3 rounded-lg border border-slate-600 mb-6">
+            <span class="text-red-400 font-bold uppercase text-sm">Impostores</span>
+            <div class="flex items-center gap-4">
+                <button onclick="changeLocalImpostors(-1)" class="bg-slate-700 w-8 h-8 rounded text-white font-bold">-</button>
+                <span id="local-imp-count" class="text-white font-bold text-xl">1</span>
+                <button onclick="changeLocalImpostors(1)" class="bg-slate-700 w-8 h-8 rounded text-white font-bold">+</button>
+            </div>
+        </div>
+        <button onclick="startLocalGame()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold py-4 rounded-xl shadow-lg uppercase">Jugar Local</button>
+    </section>
+
+    <section id="local-game" class="w-full max-w-md hidden fade-in relative">
+        
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4 text-center relative overflow-hidden">
+            <div id="local-timer-bar" class="absolute top-0 left-0 h-1.5 bg-blue-500 w-full transition-all duration-1000 linear"></div>
+            <p id="local-phase-label" class="text-xs text-slate-400 uppercase font-bold tracking-widest relative z-10">TURNO DE</p>
+            
+            <h2 id="local-current-player" class="text-2xl font-bold text-white my-1 relative z-10">JUGADOR</h2>
+            
+            <div id="local-timer" class="text-4xl font-bold text-yellow-400 digital-font relative z-10">00:00</div>
+            <button onclick="skipLocalTurn()" class="text-xs bg-slate-700 px-3 py-1 rounded text-white mt-2 relative z-10 hover:bg-slate-600">⏩ Terminé de Hablar</button>
+        </div>
+
+        <div id="local-voting-area">
+            <div id="local-grid" class="grid grid-cols-2 gap-3"></div>
+        </div>
+        
+        <button onclick="localReset(true)" class="w-full mt-8 bg-slate-900 py-3 rounded text-slate-500 text-xs">Cancelar Partida</button>
+    </section>
+
+    <section id="local-reveal" class="w-full max-w-md hidden fade-in">
+        <div class="text-center mb-4">
+            <p class="text-slate-400 text-xs uppercase mb-1">Turno de:</p>
+            <h2 id="local-reveal-name" class="text-3xl font-bold text-white">...</h2>
+        </div>
+        <div class="shutter-wrapper mb-6">
+            <div class="shutter-content">
+                <div id="local-role-civil" class="hidden text-center w-full">
+                    <h3 class="text-xs font-bold text-blue-400 mb-4 uppercase tracking-widest">ERES CIVIL</h3>
+                    <div class="bg-slate-900 border-2 border-green-500/50 px-4 py-6 rounded-xl mx-4">
+                        <span id="local-secret-word" class="text-2xl font-bold text-green-400 uppercase">...</span>
+                    </div>
+                </div>
+                <div id="local-role-impostor" class="hidden text-center w-full px-4">
+                    <h3 class="text-4xl font-bold text-red-600 mb-2 digital-font tracking-wider">IMPOSTOR</h3>
+                    <p class="text-slate-300 text-sm mb-4">Engaña a todos.</p>
+                    <div id="local-hint-container" class="hidden mt-2">
+                        <p class="text-[10px] text-yellow-500 uppercase font-bold mb-1">PISTA:</p>
+                        <div class="bg-yellow-900/20 border border-yellow-500/30 p-2 rounded">
+                            <p id="local-hint-text" class="text-sm text-white italic">...</p>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-4">Categoría: <span id="local-imp-cat" class="font-bold uppercase"></span></p>
+                </div>
+            </div>
+            <div id="shutter-door" class="shutter-door flex flex-col items-center justify-end pb-8">
+                <span class="text-4xl mb-2 opacity-50">⬆</span>
+                <span class="text-slate-400 text-xs font-bold uppercase opacity-70">Desliza</span>
+            </div>
+        </div>
+        <div id="local-reveal-actions" class="opacity-0 pointer-events-none transition-opacity duration-300 space-y-3">
+            <button id="local-next-btn" class="w-full bg-slate-700 text-white font-bold py-4 rounded-xl hidden">SIGUIENTE ➔</button>
+            <button id="local-start-btn" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl hidden">¡EMPEZAR! ⏱️</button>
+        </div>
+    </section>
+
+    <section id="online-menu" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 hidden fade-in">
+        <button onclick="showScreen('main-menu')" class="text-slate-500 text-sm mb-4">← Volver</button>
+        <input type="text" id="online-name" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white mb-6" placeholder="Tu Nombre">
+        <button onclick="createRoom()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-lg mb-4">👑 Crear Sala</button>
+        <div class="relative flex py-2 items-center mb-4"><div class="flex-grow border-t border-slate-600"></div><span class="flex-shrink-0 mx-4 text-slate-500 text-xs">O UNITE</span><div class="flex-grow border-t border-slate-600"></div></div>
+        <input type="text" id="online-code" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white text-center font-mono uppercase tracking-widest mb-2" placeholder="CÓDIGO">
+        <button onclick="joinRoom()" class="w-full bg-slate-700 text-white font-bold py-3 rounded-lg">Unirse</button>
+        <p id="online-status" class="text-center text-xs text-yellow-400 mt-2 h-4"></p>
+    </section>
+
+    <section id="online-lobby" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 hidden fade-in">
+        <div class="text-center mb-6">
+            <p class="text-xs text-slate-400 uppercase">Código de Sala</p>
+            <div class="flex items-center justify-center gap-2 my-2">
+                <h2 id="lobby-code" class="text-4xl font-mono font-bold text-purple-400 tracking-widest select-all cursor-pointer">....</h2>
+                <button onclick="toggleCode()" class="text-xl">👁️</button>
+            </div>
+        </div>
+        
+        <div id="host-controls" class="mb-6 bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <label class="text-xs text-yellow-400 font-bold uppercase block mb-2">Configuración</label>
+            <select id="online-cat-select" onchange="syncSettings()" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white disabled-input mb-3">
+                <option value="games">🎮 Videojuegos</option>
+                <option value="movies">🎬 Películas</option>
+                <option value="places">📍 Lugares</option>
+                <option value="football">⚽ Futbolistas</option>
+            </select>
+            
+            <label class="toggle-wrapper">
+                <span class="text-xs text-slate-300">⏱️ Tiempo (Turnos)</span>
+                <input type="checkbox" id="online-time-switch" class="toggle-checkbox disabled-input" onchange="toggleOnlinePanel('time'); syncSettings()" checked>
+                <span class="toggle-track" style="transform: scale(0.8)"></span>
+            </label>
+            <div id="online-time-panel" class="panel-collapsible open">
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <input type="number" id="online-time-discuss" value="30" onchange="syncSettings()" class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-center text-white disabled-input" placeholder="Hablar">
+                    <input type="number" id="online-time-vote" value="15" onchange="syncSettings()" class="w-full bg-slate-800 border border-slate-600 rounded p-1 text-center text-white disabled-input" placeholder="Votar">
+                </div>
+            </div>
+
+            <label class="toggle-wrapper border-t border-slate-700 pt-2 mt-2">
+                <span class="text-xs text-slate-300">🔇 Sin Audio (Chat)</span>
+                <input type="checkbox" id="online-noaudio-switch" class="toggle-checkbox disabled-input" onchange="syncSettings()">
+                <span class="toggle-track" style="transform: scale(0.8)"></span>
+            </label>
+
+            <label class="toggle-wrapper border-t border-slate-700 pt-2 mt-2">
+                <span class="text-xs text-slate-300">⚖️ Equilibrado</span>
+                <input type="checkbox" id="online-balanced-switch" class="toggle-checkbox disabled-input" onchange="toggleOnlinePanel('balanced'); syncSettings()">
+                <span class="toggle-track" style="transform: scale(0.8)"></span>
+            </label>
+            
+            <div id="online-balanced-panel" class="panel-collapsible">
+                <div class="mt-2 bg-slate-800/50 p-2 rounded border border-slate-600/50">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Aumento %</label>
+                        <span id="online-balanced-val" class="text-yellow-400 font-bold text-sm">50%</span>
+                    </div>
+                    <input type="range" id="online-balanced-rate" min="10" max="100" step="10" value="50" 
+                           class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-yellow-500 disabled-input"
+                           oninput="document.getElementById('online-balanced-val').innerText = this.value + '%'"
+                           onchange="syncSettings()">
+                    
+                    <p class="text-[10px] text-slate-500 mt-2 leading-tight">
+                        * Civil: Sube el %. <br>
+                        * Impostor: Baja 15% (1ª vez), 30% (2ª vez) o 50% (si tenías 100%). <br>
+                        * 3 veces seguidas = 0% chance.
+                    </p>
+                </div>
+            </div>
+
+            <label class="toggle-wrapper border-t border-slate-700 pt-2 mt-2">
+                <span class="text-xs text-slate-300">🕵️ Impostor Adivina</span>
+                <input type="checkbox" id="online-guess-switch" class="toggle-checkbox disabled-input" onchange="toggleOnlinePanel('guess'); syncSettings()">
+                <span class="toggle-track" style="transform: scale(0.8)"></span>
+            </label>
+            <div id="online-guess-panel" class="panel-collapsible">
+                <div class="mt-2 bg-slate-800/50 p-2 rounded border border-slate-600/50">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Intentos</label>
+                        <span id="online-guess-val" class="text-yellow-400 font-bold text-sm">1</span>
+                    </div>
+                    <input type="range" id="online-guess-attempts" min="1" max="5" value="1" 
+                           class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-yellow-500 disabled-input"
+                           oninput="document.getElementById('online-guess-val').innerText = this.value"
+                           onchange="syncSettings()">
+                </div>
+            </div>
+
+            <label class="toggle-wrapper border-t border-slate-700 pt-2 mt-2">
+                <span class="text-xs text-slate-300">💡 Pistas</span>
+                <input type="checkbox" id="online-hint-switch" class="toggle-checkbox disabled-input" onchange="toggleOnlinePanel('hint'); syncSettings()">
+                <span class="toggle-track" style="transform: scale(0.8)"></span>
+            </label>
+            
+            <div id="online-hint-panel" class="panel-collapsible">
+                <div class="mt-2 bg-slate-800/50 p-2 rounded border border-slate-600/50">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Cantidad</label>
+                        <span id="online-hint-val" class="text-yellow-400 font-bold text-sm">1</span>
+                    </div>
+                    <input type="range" id="online-hint-count" min="1" max="5" value="1" 
+                           class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-yellow-500 disabled-input"
+                           oninput="document.getElementById('online-hint-val').innerText = this.value"
+                           onchange="syncSettings()">
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-3">
+                <span class="text-sm text-slate-300">Impostores:</span>
+                <div class="flex gap-3 items-center">
+                    <button onclick="adjOnlineImp(-1)" class="w-6 h-6 bg-slate-700 rounded disabled-input">-</button>
+                    <span id="online-imp-count" class="font-bold text-white">1</span>
+                    <button onclick="adjOnlineImp(1)" class="w-6 h-6 bg-slate-700 rounded disabled-input">+</button>
+                </div>
+            </div>
+            <button id="btn-start-online" onclick="startOnlineGame()" class="w-full bg-green-600 text-white font-bold py-2 rounded mt-4 uppercase text-sm hidden">Iniciar</button>
+            <p id="msg-wait-host" class="text-xs text-center text-slate-500 mt-2 italic hidden">Esperando al host...</p>
+        </div>
+
+        <ul id="online-player-list" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></ul>
+        <button onclick="leaveRoom()" class="w-full bg-red-900/50 text-red-400 text-xs py-2 rounded">Salir</button>
+    </section>
+
+    <section id="online-game" class="w-full max-w-md hidden fade-in relative">
+        <div id="online-msg-overlay" class="hidden msg-overlay">
+            <span id="o-overlay-text" class="msg-text">...</span>
+            <span id="o-overlay-author" class="msg-author">...</span>
+        </div>
+
+        <div class="bg-slate-800 p-2 rounded mb-4 text-center relative overflow-hidden">
+            <div id="online-timer-bar" class="absolute top-0 left-0 h-1 bg-blue-500 w-full transition-all duration-500 linear"></div>
+            <p id="online-phase-lbl" class="text-[10px] text-slate-400 uppercase font-bold tracking-widest relative z-10">ESPERANDO...</p>
+            
+            <h2 id="online-current-turn" class="text-xl font-bold text-white my-1 relative z-10 hidden">...</h2>
+
+            <div id="online-timer" class="text-4xl font-bold text-white digital-font relative z-10">00:00</div>
+            
+            <button id="btn-skip-online" onclick="onlineSkipTurn()" class="text-[10px] bg-slate-600 px-3 py-1 rounded mt-1 hidden relative z-10 hover:bg-slate-500">⏩ Saltar Turno</button>
+        </div>
+
+        <div class="text-center py-4 border-b border-slate-700 mb-4">
+            <h2 id="online-role-text" class="text-3xl font-bold digital-font mb-2">...</h2>
+            <div id="online-word-box" class="bg-slate-900 p-3 rounded-xl border border-slate-600 inline-block w-full">
+                <span id="online-the-word" class="text-lg font-bold text-white">???</span>
+                <div id="online-hint-container" class="hidden mt-2">
+                    <p class="text-[10px] text-yellow-500 uppercase font-bold mb-1">PISTA:</p>
+                    <div class="bg-yellow-900/20 border border-yellow-500/30 p-2 rounded">
+                        <p id="online-imp-cat-hint" class="text-sm text-white italic">...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="online-input-area" class="hidden mb-4 relative">
+            <p class="text-[10px] text-slate-400 uppercase mb-1">Tu Turno:</p>
+            <div id="online-chat-box" class="chat-container">
+                <input type="text" id="online-chat-input" class="chat-input" placeholder="Escribe aquí..." autocomplete="off">
+                <button onclick="sendOnlineMessage()" class="btn-send">➤</button>
+            </div>
+            
+            <button id="btn-online-guess" onclick="toggleOnlineGuess()" class="hidden w-full mt-2 bg-yellow-600/50 border border-yellow-500 text-yellow-200 text-xs py-2 rounded font-bold uppercase hover:bg-yellow-600">🕵️ Adivinar Palabra</button>
+        </div>
+
+        <p id="online-vote-msg" class="text-center text-xs text-slate-500 font-bold uppercase mb-2">Juego en curso...</p>
+        <div id="online-grid" class="grid grid-cols-2 gap-2 opacity-50 pointer-events-none transition-opacity"></div>
+
+        <div id="online-guess-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4 fade-in">
+            <div class="bg-slate-800 w-full max-w-sm p-6 rounded-2xl border-2 border-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.3)] relative">
+                
+                <h3 class="text-xl font-bold text-yellow-400 text-center mb-1 uppercase">Adivina la Palabra</h3>
+                <p class="text-xs text-slate-400 text-center mb-4">Si fallas, pierdes intentos.</p>
+                
+                <div class="relative">
+                    <input type="text" id="online-guess-modal-input" 
+                           class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:border-yellow-500 outline-none" 
+                           placeholder="Escribe la palabra exacta..." autocomplete="off">
+                    
+                    <div id="online-guess-modal-suggestions" class="absolute left-0 right-0 top-full mt-1 bg-slate-700 border border-slate-600 rounded-lg max-h-32 overflow-y-auto hidden z-20"></div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button onclick="toggleOnlineGuess()" class="flex-1 bg-slate-700 text-slate-300 py-2 rounded-lg font-bold">Cancelar</button>
+                    <button onclick="confirmOnlineGuessFromModal()" class="flex-1 bg-yellow-600 text-white py-2 rounded-lg font-bold hover:bg-yellow-500">¡Adivinar!</button>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <section id="rules-section" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 hidden fade-in relative overflow-hidden">
+        
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 tracking-wider digital-font">CÓMO JUGAR</h2>
+            <p class="text-slate-500 text-xs uppercase tracking-widest mt-2">Paso <span id="rule-step-num">1</span> de 4</p>
+        </div>
+
+        <div class="h-48 bg-slate-900/50 rounded-xl border border-slate-700 mb-6 relative overflow-hidden flex items-center justify-center">
+            
+            <div id="rule-animations-container" class="h-48 bg-slate-900/50 rounded-xl border border-slate-700 mb-6 relative overflow-hidden flex items-center justify-center p-4">
+            
+            <div id="rule-anim-1" class="scene-container hidden">
+                <div class="cards-layout">
+                    
+                    <div class="locker-box l1">
+                        <div class="locker-door"></div>
+                        <div class="locker-inner">
+                            <div class="role-bar bar-green"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="locker-box l2">
+                        <div class="locker-door"></div>
+                        <div class="locker-inner">
+                            <div class="role-bar bar-red"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="locker-box l3">
+                        <div class="locker-door"></div>
+                        <div class="locker-inner">
+                            <div class="role-bar bar-green"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="rule-anim-2" class="scene-container hidden">
+                <div class="row-layout">
+                    <div class="avatar-wrapper">
+                        <div class="bubble-box bb-1"><div class="squiggle"></div></div>
+                        <div class="a-head"></div><div class="a-body"></div>
+                    </div>
+                    <div class="avatar-wrapper" style="margin-bottom: 5px;"> <div class="bubble-box bb-2"><div class="squiggle"></div></div>
+                        <div class="a-head"></div><div class="a-body"></div>
+                    </div>
+                    <div class="avatar-wrapper role-imp">
+                        <div class="bubble-box bb-3"><div class="squiggle"></div></div>
+                        <div class="a-head">
+                            <div class="horns"><div class="horn horn-l"></div><div class="horn horn-r"></div></div>
+                        </div>
+                        <div class="a-body"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="rule-anim-3" class="scene-container hidden">
+                <div class="triangle-container">
+                    <div class="tr-top">
+                        <div class="avatar-wrapper role-imp imp-react-move">
+                            <div class="imp-q imp-react-sym">?</div> <div class="a-head">
+                                <div class="horns"><div class="horn horn-l"></div><div class="horn horn-r"></div></div>
+                            </div>
+                            <div class="a-body"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tr-bottom">
+                        <div class="avatar-wrapper">
+                            <div class="accuse-bubble show-accuse">😈</div> <div class="a-head"></div><div class="a-body"></div>
+                        </div>
+                        
+                        <div class="avatar-wrapper">
+                            <div class="a-head"></div><div class="a-body"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="rule-anim-4" class="scene-container hidden">
+                <div class="row-layout" style="justify-content: space-between;"> 
+                    <div class="avatar-wrapper">
+                        <div class="vote-thumb vt-show">👎</div>
+                        <div class="a-head"></div><div class="a-body"></div>
+                    </div>
+                    
+                    <div class="avatar-wrapper role-imp imp-drop">
+                        <div class="a-head">
+                            <div class="horns"><div class="horn horn-l"></div><div class="horn horn-r"></div></div>
+                        </div>
+                        <div class="a-body"></div>
+                    </div>
+
+                    <div class="avatar-wrapper">
+                        <div class="vote-thumb vt-show">👎</div>
+                        <div class="a-head"></div><div class="a-body"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-600 min-h-[100px] flex items-center justify-center">
+            <p id="rule-text-content" class="text-slate-300 text-sm text-center font-medium leading-relaxed">...</p>
+        </div>
+
+        <div class="flex gap-4 mt-6">
+            <button id="btn-prev-rule" onclick="prevRule()" class="flex-1 bg-slate-700 text-slate-300 font-bold py-3 rounded-xl disabled:opacity-50 transition hover:bg-slate-600 active:scale-95">← Volver</button>
+            <button id="btn-next-rule" onclick="nextRule()" class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-xl transition hover:from-yellow-400 hover:to-orange-400 active:scale-95 shadow-lg">Siguiente →</button>
+        </div>
+    </section>
+
+    <div id="donation-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center p-6 text-center modal-backdrop-simple">
+        <div class="bg-slate-800 p-6 rounded-2xl border border-yellow-500/30 shadow-2xl w-full max-w-sm relative fade-in">
+            <button onclick="closeDonation()" class="absolute top-3 right-4 text-slate-400 hover:text-white text-xl font-bold">✕</button>
+            <div class="text-5xl mb-4 animate-bounce">💖</div>
+            <h2 class="text-2xl font-bold text-yellow-400 mb-2 uppercase digital-font">¡Muchas Gracias!</h2>
+            <p class="text-slate-300 text-sm mb-6 font-light">Tu apoyo me ayuda a mantener este proyecto vivo.</p>
+            <div class="text-left space-y-4">
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Alias (Ualá)</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" value="GOMITAEXE.UALA" id="alias-input" readonly class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white text-sm font-mono text-center focus:outline-none">
+                        <button onclick="copyToClip('alias-input')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded text-sm transition hover:scale-105 active:scale-95">📋</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">CVU</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" value="3840200500000006968267" id="cvu-input" readonly class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white text-sm font-mono text-center focus:outline-none">
+                        <button onclick="copyToClip('cvu-input')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded text-sm transition hover:scale-105 active:scale-95">📋</button>
+                    </div>
+                </div>
+            </div>
+            <p id="copy-feedback" class="text-green-400 text-xs mt-4 h-4 font-bold opacity-0 transition-opacity">¡Copiado al portapapeles!</p>
+        </div>
+    </div>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center p-6 text-center modal-backdrop-simple">
+        <div id="modal-countdown" class="hidden">
+            <h2 class="text-xl text-cyan-300 mb-8 uppercase tracking-widest">Revelando en...</h2>
+            <div id="count-num" class="text-9xl font-bold text-white digital-font animate-pulse">3</div>
+        </div>
+        
+        <div id="modal-content" class="hidden w-full max-w-sm fade-in">
+            <div id="modal-icon" class="text-8xl mb-4 animate-bounce"></div>
+            <h2 id="modal-title" class="text-3xl font-bold mb-4 uppercase digital-font leading-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">TITULO</h2>
+            <div id="modal-desc" class="text-lg text-slate-300 mb-8 leading-relaxed font-bold bg-slate-900/50 p-4 rounded-xl border border-slate-700">Descripción</div>
+            
+            <div id="modal-host-controls" class="hidden flex-col gap-3">
+                <div id="modal-btns-game-over" class="flex flex-col gap-3">
+                    <button id="btn-replay" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition shadow-lg uppercase text-xl active:scale-95">🔄 Volver a Jugar</button>
+                    <button id="btn-exit" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-500 transition shadow-lg uppercase active:scale-95">🚪 Cerrar Sala</button>
+                </div>
+                <button id="btn-continue-game" class="hidden w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-500 transition shadow-lg uppercase text-xl active:scale-95">Continuar Partida ➔</button>
+            </div>
+
+            <div id="modal-client-msg" class="hidden">
+                <p class="text-yellow-400 animate-pulse font-bold tracking-widest uppercase text-sm">⏳ Esperando al Host...</p>
+                <button onclick="location.reload()" class="mt-6 text-xs text-red-400 hover:text-red-300 underline">Salir de la sala</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="system-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center p-6 text-center modal-backdrop-simple">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 shadow-2xl w-full max-w-xs fade-in">
+            <h3 id="sys-title" class="text-lg font-bold text-cyan-400 mb-3 uppercase">Mensaje</h3>
+            <p id="sys-msg" class="text-slate-300 text-sm mb-6">...</p>
+            
+            <button id="sys-ok" class="hidden w-full bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-bold transition hover:scale-105 active:scale-95">Entendido</button>
+            
+            <div id="sys-confirm-btns" class="hidden flex gap-3">
+                <button id="sys-no" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg font-bold transition active:scale-95">Cancelar</button>
+                <button id="sys-yes" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold transition active:scale-95">Aceptar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../JavaScript/menu.js"></script>
+    <script src="../JavaScript/local.js"></script>
+    <script src="../JavaScript/online.js"></script>
+</body>
+</html>

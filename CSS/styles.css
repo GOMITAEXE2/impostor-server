@@ -1,0 +1,581 @@
+/* =========================================
+   1. CONFIGURACIÓN BASE & UTILIDADES
+   ========================================= */
+body { 
+    background-color: #080d1a; 
+    color: #e2e8f0; 
+    user-select: none; 
+    -webkit-tap-highlight-color: transparent; 
+    font-family: 'Roboto', sans-serif; 
+}
+
+.digital-font { font-family: 'Orbitron', sans-serif; }
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.4s ease-out; }
+.disabled-input { opacity: 0.6; pointer-events: none; background-color: #1e293b; }
+.blur-code { filter: blur(8px); user-select: none; }
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* =========================================
+   2. SWITCHES (INTERRUPTORES)
+   ========================================= */
+.toggle-wrapper { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    cursor: pointer; 
+    padding: 12px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+}
+
+.toggle-checkbox { 
+    position: absolute; 
+    opacity: 0; 
+    cursor: pointer; 
+    height: 0; 
+    width: 0; 
+}
+
+.toggle-track { 
+    position: relative; 
+    display: inline-block; 
+    width: 44px; 
+    height: 24px; 
+    background-color: #334155; 
+    border-radius: 34px; 
+    transition: .3s; 
+}
+
+.toggle-track:before { 
+    position: absolute; 
+    content: ""; 
+    height: 18px; 
+    width: 18px; 
+    left: 3px; 
+    bottom: 3px; 
+    background-color: white; 
+    border-radius: 50%; 
+    transition: .3s; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+}
+
+.toggle-checkbox:checked + .toggle-track { background-color: #2563eb; }
+.toggle-checkbox:checked + .toggle-track:before { transform: translateX(20px); }
+
+/* =========================================
+   3. PANELES DESPLEGABLES
+   ========================================= */
+.panel-collapsible {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 0;
+    padding: 0 5px; 
+}
+
+.panel-collapsible.open {
+    max-height: 500px; 
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* =========================================
+   4. ANIMACIONES DEL MENÚ (ICONOS)
+   ========================================= */
+/* --- A. MODO LOCAL: Mini-Juego (Loop Infinito) --- */
+
+/* Estados iniciales (para que no se vea roto si no pasas el mouse) */
+.mini-player { opacity: 0; }
+.mini-role { transform: translateX(-100%); }
+.mini-win-screen { opacity: 0; pointer-events: none; }
+.mini-vote { opacity: 0; }
+
+/* --- CICLO PRINCIPAL (5 Segundos) --- */
+
+/* 1. JUGADORES CIVILES (Aparecen, esperan, desaparecen al final) */
+.group:hover .mini-player.p1,
+.group:hover .mini-player.p3 {
+    animation: civilsLoop 5s infinite;
+}
+/* Pequeño retraso para que aparezcan en escalera */
+.group:hover .mini-player.p3 { animation-delay: 0.1s; } 
+
+/* 2. JUGADOR IMPOSTOR (Aparece, Vota, Muere) */
+.group:hover .mini-player.imp {
+    animation: impostorLoop 5s infinite;
+    animation-delay: 0.05s; 
+}
+
+/* 3. ROLES (Las barritas de color se deslizan) */
+.group:hover .mini-role {
+    animation: rolesLoop 5s infinite;
+}
+
+/* 4. DEDITO VOTANDO (Aparece solo en la fase de votación) */
+.group:hover .mini-vote {
+    animation: voteIconLoop 5s infinite;
+}
+
+/* 5. PANTALLA DE VICTORIA (Aparece al final y resetea) */
+.group:hover .mini-win-screen {
+    animation: winScreenLoop 5s infinite;
+}
+
+
+/* --- KEYFRAMES (LA COREOGRAFÍA EXACTA) --- */
+
+/* Ciclo Civiles: Aparecen > Esperan > Fade Out */
+@keyframes civilsLoop {
+    0% { opacity: 0; transform: translateY(5px); }
+    10% { opacity: 1; transform: translateY(0); } 
+    80% { opacity: 1; } 
+    90% { opacity: 0; } 
+    100% { opacity: 0; }
+}
+
+/* Ciclo Roles: Escondidos > Se muestran > Se esconden */
+@keyframes rolesLoop {
+    0%, 20% { transform: translateX(-100%); } 
+    30%, 80% { transform: translateX(0); } 
+    90%, 100% { transform: translateX(-100%); } 
+}
+
+/* Ciclo Impostor: Aparece > Tiembla > Muere */
+@keyframes impostorLoop {
+    0% { opacity: 0; transform: translateY(5px) scale(1); margin-bottom: 4px; }
+    10% { opacity: 1; transform: translateY(0) scale(1); } 
+    40% { transform: translateX(0) scale(1); } 
+    
+    /* FASE DE TEMBLOR (Votación) 40% al 60% */
+    45% { transform: translateX(-1px); }
+    50% { transform: translateX(1px); }
+    55% { transform: translateX(-1px); }
+    60% { transform: translateX(0); opacity: 1; height: 12px; margin-bottom: 4px; }
+    
+    /* FASE DE MUERTE (Expulsión) */
+    65% { transform: scale(0); opacity: 0; height: 0; margin-bottom: 0; } 
+    
+    100% { transform: scale(0); opacity: 0; height: 0; margin-bottom: 0; } 
+}
+
+/* Ciclo Dedito Votando: Solo aparece un ratito */
+@keyframes voteIconLoop {
+    0%, 40% { opacity: 0; transform: translateX(5px); }
+    45% { opacity: 1; transform: translateX(0); } 
+    60% { opacity: 1; }
+    65%, 100% { opacity: 0; } 
+}
+
+/* Ciclo Victoria: Invisible > Verde > Reset */
+@keyframes winScreenLoop {
+    0%, 65% { opacity: 0; } 
+    70% { opacity: 1; } 
+    85% { opacity: 1; } 
+    95% { opacity: 0; } 
+    100% { opacity: 0; }
+}
+
+/* --- B. MODO ONLINE: Red Impostora --- */
+
+/* ESTADO BASE: Monitores visibles pero estáticos */
+.mini-pc { 
+    opacity: 1;           /* Siempre visibles */
+    transform: scale(1);  /* Tamaño normal */
+    transition: transform 0.3s ease; /* Suavidad si se mueven */
+}
+
+/* ANIMACIONES DE CONTENIDO (Solo al hacer Hover) */
+
+/* 1. REVELACIÓN DE ROLES (Líneas de colores) */
+.group:hover .pc-role-imp, 
+.group:hover .pc-role-civ {
+    animation: pcShowRole 5s infinite;
+}
+
+/* 2. MUERTE DE CIVILES (Cruz roja) */
+.group:hover .pc-dead {
+    animation: pcDie 5s infinite;
+}
+
+/* 3. PÁNICO (Votación) */
+.group:hover .pc-left .mini-pc-screen {
+    animation: pcPanic 5s infinite;
+}
+
+/* 4. VICTORIA IMPOSTOR */
+.group:hover .pc-win-imp {
+    animation: pcWin 5s infinite;
+}
+
+/* Pequeño detalle: que los monitores se "separen" un poquito al activarse */
+.group:hover .pc-top { transform: translateY(-2px); }
+.group:hover .pc-left { transform: translateX(-4px); }
+.group:hover .pc-right { transform: translateX(4px); }
+
+
+/* --- KEYFRAMES (Siguen igual, solo borré pcFadeIn que ya no sirve) --- */
+
+@keyframes pcShowRole {
+    0%, 10% { transform: scaleX(0); } /* Espera inicial */
+    15% { transform: scaleX(1); opacity: 1; } /* Se prende */
+    60% { transform: scaleX(1); opacity: 1; } /* Se mantiene */
+    65% { transform: scaleX(0); opacity: 0; } /* Se apaga */
+    100% { transform: scaleX(0); opacity: 0; }
+}
+
+@keyframes pcPanic {
+    0%, 40% { border-color: #a855f7; transform: translateX(0); } /* Borde violeta normal */
+    
+    /* FASE DE VOTACIÓN: Tiembla y se pone rojo */
+    42% { transform: translateX(-1px); border-color: #ef4444; } 
+    44% { transform: translateX(1px); }
+    46% { transform: translateX(-1px); }
+    48% { transform: translateX(1px); }
+    50% { transform: translateX(0); }
+    
+    60% { border-color: #a855f7; } /* Vuelve a violeta */
+    100% { transform: translateX(0); }
+}
+
+@keyframes pcDie {
+    0%, 60% { opacity: 0; transform: scale(0); }
+    65% { opacity: 1; transform: scale(1.2); } /* Aparece la cruz */
+    75% { transform: scale(1); }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes pcWin {
+    0%, 65% { opacity: 0; transform: scale(0); }
+    70% { opacity: 1; transform: scale(1.5); } /* Aparece el diablito */
+    75% { transform: scale(1.2); }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* =========================================
+   ---         ANIMACIÓN REGLAS          ---
+   ========================================= */
+
+/* --- 1. LÁPIZ (Movimiento calibrado al papel) --- */
+.minimal-pen {
+    position: absolute;
+    bottom: 8px;  /* Posición inicial de descanso */
+    right: 8px;
+    width: 4px;   /* Un poco más fino para ser más preciso */
+    height: 20px;
+    background-color: #64748b;
+    border-radius: 2px;
+    transform: rotate(45deg); /* Ángulo de descanso */
+    transform-origin: bottom center;
+    transition: background-color 0.3s, transform 0.3s;
+    z-index: 20;
+    pointer-events: none; /* Para que no moleste al click */
+}
+
+.minimal-pen::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 0; height: 0;
+    border-left: 2px solid transparent;
+    border-right: 2px solid transparent;
+    border-top: 4px solid #64748b;
+    transition: border-top-color 0.3s;
+}
+
+/* ESTADO ACTIVO (HOVER) */
+.group:hover .minimal-pen {
+    background-color: #facc15;
+    /* La animación dura 3s en total */
+    animation: penSyncLoop 3s infinite linear; 
+}
+.group:hover .minimal-pen::after { border-top-color: #facc15; }
+
+
+/* --- 2. LÍNEAS (Aparecen justo cuando pasa el lápiz) --- */
+.line-write {
+    transform: scaleX(0); 
+    transform-origin: left;
+    opacity: 0;
+}
+
+/* Usamos la misma duración (3s) para sincronizar */
+.group:hover .lw-1 { animation: line1 3s infinite linear; }
+.group:hover .lw-2 { animation: line2 3s infinite linear; }
+.group:hover .lw-3 { animation: line3 3s infinite linear; }
+
+
+/* --- 3. HOJA (Se voltea al final) --- */
+.top-page { transform-origin: bottom left; transition: border-color 0.3s; }
+.group:hover .top-page {
+    border-color: #facc15;
+    animation: flipPage 3s infinite ease-in-out;
+}
+
+
+/* --- KEYFRAMES (LA MAGIA MATEMÁTICA) --- */
+
+/* Lápiz: Coordenadas ajustadas para subir la punta al papel */
+@keyframes penSyncLoop {
+    0% { transform: translate(0, 0) rotate(45deg); } /* Descanso */
+    
+    /* --- ESCRIBIENDO LÍNEA 1 (ARRIBA) --- */
+    /* Subimos a -34px para llegar bien arriba */
+    10% { transform: translate(-18px, -34px) rotate(15deg); } /* Inicio L1 */
+    20% { transform: translate(-6px, -34px) rotate(15deg); }  /* Fin L1 */
+    
+    /* Bajar a Línea 2 */
+    25% { transform: translate(-18px, -22px) rotate(15deg); } /* Inicio L2 */
+    
+    /* --- ESCRIBIENDO LÍNEA 2 (MEDIO) --- */
+    35% { transform: translate(-8px, -22px) rotate(15deg); }  /* Fin L2 */
+    
+    /* Bajar a Línea 3 */
+    40% { transform: translate(-18px, -10px) rotate(15deg); }  /* Inicio L3 */
+    
+    /* --- ESCRIBIENDO LÍNEA 3 (ABAJO) --- */
+    50% { transform: translate(-12px, -10px) rotate(15deg); }  /* Fin L3 */
+    
+    /* Retirada (mientras la hoja se va) */
+    60% { transform: translate(5px, 5px) rotate(45deg); }
+    100% { transform: translate(5px, 5px) rotate(45deg); }
+}
+
+/* Línea 1: Aparece del 10% al 20% */
+@keyframes line1 {
+    0%, 10% { transform: scaleX(0); opacity: 1; }
+    20%, 70% { transform: scaleX(1); opacity: 1; } /* Se queda visible */
+    75%, 100% { opacity: 0; transform: scaleX(0); } /* Desaparece con la hoja */
+}
+
+/* Línea 2: Aparece del 25% al 35% */
+@keyframes line2 {
+    0%, 25% { transform: scaleX(0); opacity: 1; }
+    35%, 70% { transform: scaleX(1); opacity: 1; }
+    75%, 100% { opacity: 0; transform: scaleX(0); }
+}
+
+/* Línea 3: Aparece del 40% al 50% */
+@keyframes line3 {
+    0%, 40% { transform: scaleX(0); opacity: 1; }
+    50%, 70% { transform: scaleX(1); opacity: 1; }
+    75%, 100% { opacity: 0; transform: scaleX(0); }
+}
+
+/* Hoja: Se va al 70% */
+@keyframes flipPage {
+    0%, 70% { transform: rotate(0deg) translate(0,0); opacity: 1; }
+    85% { transform: rotate(-15deg) translate(-40px, -10px); opacity: 0; } /* Chau hoja */
+    86% { transform: rotate(0deg) translate(0,0); opacity: 0; } /* Reset invisible */
+    100% { opacity: 1; } /* Nueva hoja limpia */
+}
+
+/* =========================================
+   5. ELEMENTOS DEL JUEGO (PERSIANA Y UI)
+   ========================================= */
+.shutter-wrapper { 
+    position: relative; 
+    width: 100%; 
+    height: 350px; 
+    overflow: hidden; 
+    border-radius: 1rem; 
+    background-color: #1e293b; 
+    border: 2px solid #334155; 
+    touch-action: none; 
+}
+
+.shutter-content { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    z-index: 10; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    background-color: #1e293b; 
+}
+
+.shutter-door { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    z-index: 50; 
+    background-color: #334155; 
+    background-image: repeating-linear-gradient(180deg, #334155 0px, #334155 20px, #1e293b 21px, #1e293b 22px); 
+    border-bottom: 12px solid #64748b; 
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5); 
+    cursor: grab; 
+}
+
+.shutter-door:active { cursor: grabbing; }
+
+.gravity-fall { 
+    transition: transform 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045); 
+}
+
+.menu-card { 
+    transition: transform 0.2s; 
+    border: 1px solid #334155; 
+}
+
+.menu-card:active { transform: scale(0.95); }
+
+/* Efecto visual en empate */
+.tie-target { 
+    border: 2px solid #facc15 !important; 
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.5); 
+    animation: pulse 1s infinite; 
+}
+
+@keyframes pulse { 
+    0%, 100% { transform: scale(1); } 
+    50% { transform: scale(1.02); } 
+}
+
+/* --- ANIMACIONES DE MODALES --- */
+
+/* 1. Fondo Oscuro (Sin desenfoque pesado, solo opacidad rápida) */
+.modal-backdrop-simple {
+    animation: simpleFade 0.2s ease-out forwards;
+}
+
+@keyframes simpleFade { 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
+}
+
+/* =========================================
+   6. NUEVOS ESTILOS (V5 - UPDATE TXT)
+   ========================================= */
+
+/* INDICADOR DE TURNO ACTIVO (Latido Amarillo) */
+.turn-active {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+    animation: turnPulse 1.5s infinite;
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+@keyframes turnPulse {
+    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+}
+
+/* CHAT "SIN AUDIO" (Estilo WhatsApp) */
+.chat-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 12px;
+    background: #0f172a;
+    border: 2px solid #334155;
+    margin-top: 10px;
+    transition: all 0.3s;
+}
+
+.chat-container.role-civil { border-color: #22d3ee; } /* Cian para Civil */
+.chat-container.role-imp { border-color: #ef4444; }   /* Rojo para Impostor */
+
+.chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 16px; /* Adaptativo se maneja con JS */
+    outline: none;
+}
+
+/* Botón Avioncito */
+.btn-send {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+    padding: 5px;
+    border-radius: 50%;
+}
+.role-civil .btn-send { color: #22d3ee; }
+.role-imp .btn-send { color: #ef4444; }
+.btn-send:active { transform: scale(0.9) rotate(15deg); }
+
+/* LEYENDA FLOTANTE (Mensaje enviado) */
+.msg-overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 20px;
+    border-radius: 16px;
+    border: 2px solid #facc15;
+    text-align: center;
+    z-index: 100;
+    width: 90%;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.msg-text { font-size: 1.5rem; font-weight: bold; color: white; margin-bottom: 10px; display: block; }
+.msg-author { font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 2px; }
+
+/* AUTOCOMPLETE PARA ADIVINAR */
+.guess-results {
+    position: absolute;
+    bottom: 100%; left: 0; right: 0;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 50;
+}
+.guess-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #334155; font-size: 12px; }
+.guess-item:hover { background: #334155; }
+
+@keyframes popIn { from { transform: translate(-50%, -40%) scale(0.5); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+/* BADGE DE VOTOS (Los deditos) - ESTILO ACTUALIZADO */
+.vote-count-badge {
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    background-color: #ef4444; /* Rojo */
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 12px;
+    border: 2px solid #1e293b; /* Borde oscuro para separar */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 20;
+    display: flex;
+    gap: 1px;
+}
+
+/* BOTÓN ACTIVO PARA VOTAR (Brillo Online) */
+.vote-active-btn {
+    background-color: #334155 !important; /* Slate-700 base */
+    opacity: 1 !important;
+    border: 2px solid #3b82f6 !important; /* Borde Azul */
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    transform: scale(1.02);
+    cursor: pointer !important;
+}
+.vote-active-btn:hover {
+    background-color: #475569 !important;
+    transform: scale(1.05);
+}

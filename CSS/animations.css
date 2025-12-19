@@ -1,0 +1,245 @@
+/* =========================================
+   ESTILOS BASE & ESCENARIO
+   ========================================= */
+.scene-container {
+    width: 100%; height: 100%; position: relative;
+    padding: 10px; /* Padding seguro */
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* =========================================
+   DISEÑO DE PERSONAJE (FICHA SÓLIDA)
+   ========================================= */
+.avatar-wrapper {
+    position: relative; width: 44px; height: 50px;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    transition: transform 0.3s;
+    z-index: 5;
+}
+
+/* CABEZA */
+.a-head {
+    width: 26px; height: 26px; background: #e2e8f0;
+    border-radius: 50%; z-index: 10; position: relative; /* Relative para contener los cuernos */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* CUERPO */
+.a-body {
+    width: 40px; height: 26px; background: #e2e8f0;
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    margin-top: -4px; z-index: 5;
+}
+
+/* CUERNOS (Ahora viven DENTRO de la cabeza) */
+.horns {
+    position: absolute; top: -10px; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+}
+.horn {
+    position: absolute; top: 0; width: 0; height: 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-bottom: 12px solid #ef4444; /* Rojo diablo */
+}
+.horn-l { left: -2px; transform: rotate(-25deg); }
+.horn-r { right: -2px; transform: rotate(25deg); }
+
+
+/* ROLES Y COLORES */
+.role-imp .a-head, .role-imp .a-body { background: #ef4444; } 
+.role-civ .a-head, .role-civ .a-body { background: #e2e8f0; }
+
+
+/* =========================================
+   ESCENA 1: CASILLEROS (SOLUCIÓN FINAL - SIN BRILLO)
+   ========================================= */
+.cards-layout {
+    display: flex; 
+    gap: 15px; 
+    width: 100%; 
+    height: 100%;
+    align-items: center; 
+    justify-content: center;
+}
+
+/* EL CASILLERO */
+.locker-box {
+    width: 80px;            
+    height: 110px;          
+    background-color: #0f172a; 
+    border: 3px solid #64748b; 
+    border-radius: 8px;
+    position: relative; 
+    overflow: hidden; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    flex-shrink: 0;         
+}
+
+/* LA PUERTA */
+.locker-door {
+    position: absolute; 
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #334155; 
+    z-index: 20;
+    background-image: repeating-linear-gradient(180deg, #334155 0, #334155 10px, #1e293b 10px, #1e293b 12px);
+    border-bottom: 5px solid #94a3b8; 
+    transition: transform 0.5s;
+}
+
+/* EL CONTENIDO */
+.locker-inner {
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* LA BARRA INTERNA */
+.role-bar {
+    width: 50px; 
+    height: 60px; 
+    border-radius: 4px;
+}
+
+/* COLORES PLANOS (Sin box-shadow) */
+.bar-green { 
+    background-color: #4ade80; 
+    /* Le saqué el box-shadow para que no brille */
+}
+.bar-red { 
+    background-color: #ef4444; 
+    /* Le saqué el box-shadow para que no brille */
+}
+
+/* --- ANIMACIÓN --- */
+.active .l1 .locker-door { animation: openLockerPx 4s infinite 0s; }
+.active .l2 .locker-door { animation: openLockerPx 4s infinite 1s; }
+.active .l3 .locker-door { animation: openLockerPx 4s infinite 2s; }
+
+@keyframes openLockerPx {
+    0%, 15% { transform: translateY(0); }       
+    25%, 60% { transform: translateY(-100%); }  
+    70%, 100% { transform: translateY(0); }     
+}
+
+/* =========================================
+   ESCENA 2: DISCUSIÓN (Globos)
+   ========================================= */
+.row-layout {
+    display: flex; gap: 20px; align-items: flex-end; width: 100%; justify-content: center;
+    height: 100%; padding-bottom: 10px;
+}
+
+.bubble-box {
+    position: absolute; top: -30px; left: 50%; transform: translateX(-50%) scale(0);
+    background: white; padding: 3px 6px; border-radius: 6px;
+    opacity: 0; z-index: 30; display: flex; justify-content: center; align-items: center;
+    min-width: 25px; height: 18px;
+}
+.bubble-box::after {
+    content: ''; position: absolute; top: 100%; left: 50%; margin-left: -4px;
+    border-width: 4px; border-style: solid; border-color: white transparent transparent transparent;
+}
+.squiggle { width: 14px; height: 2px; background: #334155; border-radius: 2px; box-shadow: 0 3px 0 #334155; }
+
+.active .bb-1 { animation: popBubble 4s infinite 0s; }
+.active .bb-2 { animation: popBubble 4s infinite 1.3s; }
+.active .bb-3 { animation: popBubble 4s infinite 2.6s; }
+
+@keyframes popBubble {
+    0%, 5% { opacity: 0; transform: translateX(-50%) scale(0); }
+    10%, 35% { opacity: 1; transform: translateX(-50%) scale(1); }
+    40%, 100% { opacity: 0; transform: translateX(-50%) scale(0); }
+}
+
+
+/* =========================================
+   ESCENA 3: ACUSACIÓN (Diálogo y Reacción)
+   ========================================= */
+.triangle-container {
+    display: flex; flex-direction: column; width: 100%; height: 100%;
+}
+.tr-top { height: 50%; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; }
+.tr-bottom { height: 50%; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 15px; }
+
+/* Globo de Acusación (Civil) */
+.accuse-bubble {
+    position: absolute; top: -35px; left: 50%; transform: translateX(-50%) scale(0);
+    background: white; border: 2px solid #ef4444; /* Borde rojo acusador */
+    padding: 2px 6px; border-radius: 8px; 
+    font-size: 14px; z-index: 30; opacity: 0;
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.accuse-bubble::after {
+    content: ''; position: absolute; top: 100%; left: 50%; margin-left: -4px;
+    border-width: 4px; border-style: solid; border-color: white transparent transparent transparent;
+}
+
+/* Signo de Pregunta (Impostor) */
+.imp-q {
+    position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+    font-size: 20px; font-weight: bold; color: #facc15; opacity: 0; z-index: 30;
+}
+
+/* --- ANIMACIONES SECUENCIALES --- */
+
+/* 1. Civil: Saca globo del diablito (Segundos 0 a 2) */
+.active .show-accuse { animation: popAccusation 5s infinite; }
+
+/* 2. Impostor: Salta, muestra ? y se inclina (Segundos 2 a 4) */
+.active .imp-react-move { animation: impJumpAndDeflect 5s infinite; transform-origin: bottom center; }
+.active .imp-react-sym { animation: impShowQuestion 5s infinite; }
+
+
+/* KEYFRAMES */
+
+@keyframes popAccusation {
+    0%, 5% { opacity: 0; transform: translateX(-50%) scale(0); }
+    10% { opacity: 1; transform: translateX(-50%) scale(1.1); } /* Pop! */
+    15%, 35% { opacity: 1; transform: translateX(-50%) scale(1); } /* Se mantiene */
+    40%, 100% { opacity: 0; transform: translateX(-50%) scale(0); }
+}
+
+@keyframes impJumpAndDeflect {
+    0%, 35% { transform: translateY(0) rotate(0deg); } /* Quieto mientras lo acusan */
+    
+    /* ¡Saltito de susto! */
+    40% { transform: translateY(-8px) rotate(0deg); } 
+    45% { transform: translateY(0) rotate(0deg); }
+    
+    /* ¡Inclinación rápida (acusar a otro)! */
+    50% { transform: translateX(5px) rotate(15deg); } /* Se tira a la derecha */
+    60% { transform: translateX(5px) rotate(15deg); } /* Mantiene un cachito */
+    
+    /* Vuelve */
+    70%, 100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes impShowQuestion {
+    0%, 35% { opacity: 0; transform: translateX(-50%) scale(0); }
+    40%, 65% { opacity: 1; transform: translateX(-50%) scale(1); } /* Aparece con el salto */
+    70%, 100% { opacity: 0; transform: translateX(-50%) scale(0); }
+}
+
+
+/* =========================================
+   ESCENA 4: VOTACIÓN (Expulsión)
+   ========================================= */
+.vote-thumb {
+    position: absolute; top: -25px; font-size: 16px; 
+    opacity: 0; transform: translateY(10px); left: 50%; margin-left: -8px;
+}
+.active .vt-show { animation: thumbUp 5s infinite 1s; }
+
+/* Impostor cayendo */
+.active .imp-drop { animation: dropDown 5s infinite; transform-origin: bottom center; }
+
+@keyframes thumbUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    10%, 70% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes dropDown {
+    0%, 50% { transform: translateY(0) rotate(0); opacity: 1; }
+    60% { transform: translateY(100px) rotate(45deg); opacity: 0; } /* Cae girando */
+    100% { opacity: 0; }
+}
