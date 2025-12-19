@@ -1,7 +1,7 @@
 // ==========================================
 // MODO ONLINE (v15 - ARQUITECTURA SOCKET.IO)
 // ==========================================
-const socket = io(); // Conexión automática al servidor
+const socket = io('https://impostor-server-gomita.onrender.com'); // Conexión automática al servidor
 var myRoomCode = "";
 var myName = "";
 var isHost = false;
