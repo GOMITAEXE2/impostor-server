@@ -1,5 +1,5 @@
 // ==========================================
-// MODO ONLINE (v16 - BLINDADO CON SEMÁFORO)
+// MODO ONLINE (v17 - CON BANNER DESLIZANTE)
 // ==========================================
 
 // 1. CONFIGURACIÓN DE CONEXIÓN ROBUSTA
@@ -14,6 +14,7 @@ var myName = "";
 var isHost = false;
 var oPlayers = [];
 var isConnected = false; // Variable para saber si estamos online
+var statusTimeout; // Variable para guardar el temporizador del cartel
 
 // Configuración del Juego
 var oSettings = {
@@ -29,7 +30,7 @@ var activeWordData = null;
 var oGuessesLeft = 1; 
 var oImpHistory = JSON.parse(localStorage.getItem('o_imp_v7_history') || '{}');
 
-// --- EL SEMÁFORO (Diagnóstico Visual) ---
+// --- EL SEMÁFORO (Diagnóstico Visual Animado) ---
 
 socket.on('connect', () => {
     isConnected = true;
@@ -48,34 +49,53 @@ socket.on('disconnect', () => {
     updateStatus("🔴 DESCONECTADO", "text-red-500");
 });
 
-// Función para mostrar la barrita de estado arriba
+// Función Mejorada: Muestra 5 seg y se esconde para arriba
 function updateStatus(msg, colorClass) {
     let el = document.getElementById('debug-status');
+    
+    // Si no existe, lo creamos con animación CSS
     if(!el) {
         let div = document.createElement('div');
         div.id = 'debug-status';
-        div.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none";
+        // Agregamos 'transition-transform duration-500' para que deslice suave
+        div.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none transition-transform duration-500";
         document.body.appendChild(div);
         el = div;
     }
+
+    // 1. Limpiamos el reloj anterior para que no se oculte antes de tiempo
+    if (statusTimeout) clearTimeout(statusTimeout);
+
+    // 2. Actualizamos texto y mostramos (bajamos el cartel)
     el.innerText = msg;
-    el.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none " + colorClass;
+    // Reseteamos las clases base + el color nuevo
+    el.className = "fixed top-0 left-0 w-full text-center bg-black bg-opacity-90 p-1 z-50 font-bold text-xs pointer-events-none transition-transform duration-500 " + colorClass;
+    el.style.transform = "translateY(0)"; // Posición visible (0%)
+
+    // 3. Programamos que se esconda en 5 segundos
+    statusTimeout = setTimeout(() => {
+        el.style.transform = "translateY(-100%)"; // Se va para arriba (fuera de pantalla)
+    }, 5000);
 }
 
 // --- LÓGICA DE CONEXIÓN ---
 
 // Escuchar mensajes del Servidor
 socket.on('GAME_EVENT', (data) => {
-    // Debug log para ver qué llega
-    // console.log("📨 LLEGÓ:", data.type); 
-    if (isHost) handleHostLogic(data);
-    else handleClientLogic(data);
+    if (isHost) {
+        handleHostLogic(data);
+    }
+    handleClientLogic(data);
 });
 
 function goToOnline() { showScreen('online-menu'); }
 
 function createRoom() {
-    if(!isConnected) return showSystemMessage("Error", "Esperá que se ponga VERDE 🟢 el estado arriba.");
+    if(!isConnected) {
+        // Forzamos mostrar el cartel si intenta crear sin internet
+        updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
+        return showSystemMessage("Error", "Esperá que se ponga VERDE 🟢 el estado arriba.");
+    }
 
     myName = document.getElementById('online-name').value.trim();
     if(!myName) return showSystemMessage("Error", "¡Ponete un nombre!");
@@ -100,7 +120,10 @@ function createRoom() {
 }
 
 function joinRoom() {
-    if(!isConnected) return showSystemMessage("Error", "Sin conexión. Esperá el VERDE 🟢.");
+    if(!isConnected) {
+        updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
+        return showSystemMessage("Error", "Sin conexión. Esperá el VERDE 🟢.");
+    }
 
     myName = document.getElementById('online-name').value.trim();
     var code = document.getElementById('online-code').value.trim();
@@ -122,16 +145,12 @@ function joinRoom() {
     socket.emit('JOIN_ROOM', myRoomCode);
 
     // 2. EL TRUCO DEL RETRASO (DOBLE CHECK)
-    // Esperamos 1.5s para asegurarnos que Socket.io nos metió en la sala
     setTimeout(() => {
         console.log("Primer intento de saludo...");
         document.getElementById('online-status').innerText = "Saludando al host...";
         
-        // Primer intento de avisar que llegué
         sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
 
-        // SEGUNDO INTENTO (Seguro de vida)
-        // Si en 3 segundos sigo solo (oPlayers vacío), toco la puerta de nuevo
         setTimeout(() => {
             if(oPlayers.length === 0) {
                 console.log("Reintentando saludo...");
@@ -142,7 +161,7 @@ function joinRoom() {
     }, 1500);
 }
 
-// Función para enviar datos (Reemplaza al 'broadcast' viejo)
+// Función para enviar datos
 function broadcast(msgObj) {
     socket.emit('GAME_EVENT', {
         room: myRoomCode,
@@ -158,19 +177,14 @@ function sendToHost(msgObj) {
 // --- LÓGICA DEL HOST (Cerebro del juego) ---
 
 function handleHostLogic(d) {
-    // Si soy Host, recibo mensajes de los clientes
     if (d.type === 'JOIN_REQUEST') {
-        // Alguien quiere entrar (y no soy yo mismo)
         if (d.payload.id !== socket.id) {
-            // Chequear si ya existe
             var existing = oPlayers.find(p => p.id === d.payload.id);
             if (!existing) {
                 oPlayers.push({ id: d.payload.id, name: d.payload.name, isHost: false, alive: true });
                 updateLobbyAndSync();
-                // Feedback visual para el host
                 showSystemMessage("Info", d.payload.name + " se unió."); 
             } else {
-                // Si ya existe (por el reintento), le mandamos la info de nuevo para que se sincronice
                 updateLobbyAndSync();
             }
         }
@@ -189,36 +203,29 @@ function handleHostLogic(d) {
         hostProcessVote(d.payload.fromId, d.payload.targetId);
     }
     else if (d.type === 'USER_LEFT') {
-    var leftId = d.payload;
-    // Buscamos quién era
-    var p = oPlayers.find(x => x.id === leftId);
-    if (p) {
-        showSystemMessage("Info", p.name + " se desconectó.");
-        
-        oPlayers = oPlayers.filter(x => x.id !== leftId);
-        updateLobbyAndSync();
-
-        adjOnlineImp(0);
+        var leftId = d.payload;
+        var p = oPlayers.find(x => x.id === leftId);
+        if (p) {
+            showSystemMessage("Info", p.name + " se desconectó.");
+            oPlayers = oPlayers.filter(x => x.id !== leftId);
+            updateLobbyAndSync();
+            adjOnlineImp(0);
+        }
     }
-}
 }
 
 function updateLobbyAndSync() {
     renderOLobby();
-    // Enviar lista actualizada a todos
     broadcast({ type: 'LOBBY_UPDATE', payload: oPlayers });
-    // Sincronizar configuración
     broadcast({ type: 'SYNC', payload: oSettings });
 }
 
 // --- LÓGICA DEL CLIENTE (Pantalla) ---
 
 function handleClientLogic(d) {
-    // console.log("CLIENTE RECIBIÓ:", d.type); 
     if (d.type === 'LOBBY_UPDATE') {
         oPlayers = d.payload; 
         renderCLobby(oPlayers);
-        // Si recibo update, es que ya me vieron
         document.getElementById('online-status').innerText = "Conectado al Lobby";
     }
     else if (d.type === 'SYNC') {
@@ -269,7 +276,6 @@ function handleClientLogic(d) {
 }
 
 // --- FUNCIONES DEL JUEGO (HOST) ---
-// (Estas no cambiaron, son las mismas que me pasaste)
 
 function startOnlineGame() {
     if(oPlayers.length < 3) return showSystemMessage("Error", "Mínimo 3 jugadores");
