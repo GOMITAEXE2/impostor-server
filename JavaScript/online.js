@@ -1,5 +1,5 @@
 // ==============================================================
-// MODO ONLINE (v18 - Cortina online arreglada)
+// MODO ONLINE (v18.1 - ADIVINANZA Y LIMPIEZA TOTAL)
 // ==============================================================
 
 // 1. CONFIGURACIÓN DE CONEXIÓN ROBUSTA
@@ -36,7 +36,6 @@ socket.on('connect', () => {
     isConnected = true;
     console.log("✅ CONECTADO AL SERVIDOR:", socket.id);
     updateStatus("🟢 ONLINE (Conectado)", "text-green-400");
-    // Si ya teníamos sala y nombre, re-unirse automáticamente al reconectar
     if(myRoomCode && myName) {
         socket.emit('JOIN_ROOM', myRoomCode);
         setTimeout(() => sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } }), 1000);
@@ -45,8 +44,7 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (err) => {
     isConnected = false;
-    console.error("❌ ERROR DE CONEXIÓN:", err);
-    updateStatus("🔴 ERROR DE CONEXIÓN (Render durmiendo...)", "text-red-500");
+    updateStatus("🔴 ERROR DE CONEXIÓN", "text-red-500");
 });
 
 socket.on('disconnect', () => {
@@ -75,19 +73,14 @@ function updateStatus(msg, colorClass) {
 // --- LÓGICA DE CONEXIÓN ---
 
 socket.on('GAME_EVENT', (data) => {
-    if (isHost) {
-        handleHostLogic(data);
-    }
+    if (isHost) handleHostLogic(data);
     handleClientLogic(data);
 });
 
 function goToOnline() { showScreen('online-menu'); }
 
 function createRoom() {
-    if(!isConnected) {
-        updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
-        return showSystemMessage("Error", "Esperá que se ponga VERDE 🟢 el estado arriba.");
-    }
+    if(!isConnected) return updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
     myName = document.getElementById('online-name').value.trim();
     if(!myName) return showSystemMessage("Error", "¡Ponete un nombre!");
     isHost = true;
@@ -99,14 +92,10 @@ function createRoom() {
     document.getElementById('lobby-code').innerText = myRoomCode;
     renderOLobby();
     enableHost(true);
-    document.getElementById('online-status').innerText = "Esperando jugadores...";
 }
 
 function joinRoom() {
-    if(!isConnected) {
-        updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
-        return showSystemMessage("Error", "Sin conexión. Esperá el VERDE 🟢.");
-    }
+    if(!isConnected) return updateStatus("⚠️ Esperando conexión...", "text-yellow-400");
     myName = document.getElementById('online-name').value.trim();
     var code = document.getElementById('online-code').value.trim();
     if(!myName || !code) return showSystemMessage("Error", "Faltan datos.");
@@ -116,42 +105,30 @@ function joinRoom() {
     showScreen('online-lobby');
     document.getElementById('lobby-code').innerText = myRoomCode;
     enableHost(false);
-    document.getElementById('online-status').innerText = "Estableciendo conexión...";
     socket.emit('JOIN_ROOM', myRoomCode);
     setTimeout(() => {
         sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
-        setTimeout(() => {
-            if(oPlayers.length === 0) sendToHost({ type: 'JOIN_REQUEST', payload: { name: myName, id: socket.id } });
-        }, 2500);
     }, 1500);
 }
 
 function broadcast(msgObj) {
-    socket.emit('GAME_EVENT', {
-        room: myRoomCode,
-        type: msgObj.type,
-        payload: msgObj.payload
-    });
+    socket.emit('GAME_EVENT', { room: myRoomCode, type: msgObj.type, payload: msgObj.payload });
 }
 
-function sendToHost(msgObj) {
-    broadcast(msgObj);
-}
+function sendToHost(msgObj) { broadcast(msgObj); }
 
 // --- LÓGICA DEL HOST (Cerebro) ---
 
 function handleHostLogic(d) {
     if (d.type === 'JOIN_REQUEST') {
         if (d.payload.id !== socket.id) {
-            // RECUPERACIÓN DE SESIÓN (Celulares)
             var existingIdx = oPlayers.findIndex(p => p.name.toLowerCase() === d.payload.name.toLowerCase());
             if (existingIdx !== -1) {
-                oPlayers[existingIdx].id = d.payload.id; // Actualizamos el ID nuevo
+                oPlayers[existingIdx].id = d.payload.id;
                 updateLobbyAndSync();
             } else {
                 oPlayers.push({ id: d.payload.id, name: d.payload.name, isHost: false, alive: true });
                 updateLobbyAndSync();
-                showSystemMessage("Info", d.payload.name + " se unió."); 
             }
         }
     }
@@ -172,12 +149,8 @@ function handleHostLogic(d) {
         var leftId = (typeof d.payload === 'object') ? d.payload.id : d.payload;
         var p = oPlayers.find(x => x.id === leftId);
         if (p) {
-            // Si estamos en medio de una partida, lo matamos pero no lo borramos para no romper los turnos
-            if (document.getElementById('online-lobby').classList.contains('hidden')) {
-                p.alive = false;
-            } else {
-                oPlayers = oPlayers.filter(x => x.id !== leftId);
-            }
+            if (document.getElementById('online-lobby').classList.contains('hidden')) p.alive = false;
+            else oPlayers = oPlayers.filter(x => x.id !== leftId);
             updateLobbyAndSync();
             adjOnlineImp(0);
         }
@@ -196,7 +169,6 @@ function handleClientLogic(d) {
     if (d.type === 'LOBBY_UPDATE') {
         oPlayers = d.payload; 
         renderCLobby(oPlayers);
-        document.getElementById('online-status').innerText = "Conectado al Lobby";
     }
     else if (d.type === 'SYNC') {
         updateClientSettings(d.payload);
@@ -206,8 +178,7 @@ function handleClientLogic(d) {
     }
     else if (d.type === 'NEW_HOST_ASSIGNED') {
         if (socket.id === d.payload) {
-            isHost = true; window.isHost = true;
-            enableHost(true);
+            isHost = true; window.isHost = true; enableHost(true);
             showSystemMessage("Info", "¡Ahora sos el Host!");
             updateLobbyAndSync();
         }
@@ -216,9 +187,7 @@ function handleClientLogic(d) {
         handleClientTurnUpdate(d.payload);
     }
     else if (d.type === 'PHASE_CHANGE') {
-        // ARREGLO: Cerramos cualquier cartel al cambiar de fase
         document.getElementById('result-modal').classList.add('hidden'); 
-        
         document.getElementById('online-phase-lbl').innerText = d.payload.isTie ? "DESEMPATE" : (d.payload.phase==='DISCUSS'?"DEBATE":"VOTACIÓN");
         if(d.payload.states) {
             d.payload.states.forEach(s => {
@@ -227,7 +196,7 @@ function handleClientLogic(d) {
             });
             renderOGrid(oPlayers);
         }
-        updateOVoteCounts({});
+        updateOVoteCounts({}); // LIMPIEZA DE VOTOS AL CAMBIAR FASE
     }
     else if (d.type === 'VOTES_UPDATE') {
         updateOVoteCounts(d.payload);
@@ -249,10 +218,7 @@ function handleClientLogic(d) {
         document.getElementById('result-modal').classList.add('hidden');
     }
     else if (d.type === 'KICK') {
-        if(d.payload === socket.id) {
-            showSystemMessage("Aviso", "Te echaron."); 
-            location.reload();
-        }
+        if(d.payload === socket.id) { location.reload(); }
     }
 }
 
@@ -261,24 +227,28 @@ function handleClientLogic(d) {
 function startOnlineGame() {
     if(oPlayers.length < 3) return showSystemMessage("Error", "Mínimo 3 jugadores");
     oGuessesLeft = oSettings.maxGuesses;
-    oVotes = {}; 
+    oVotes = {}; // LIMPIEZA DE VOTOS EN EL HOST AL EMPEZAR
+    
     var list = DB[oSettings.cat] || DB.games;
     var rawItem = list[Math.floor(Math.random()*list.length)];
-    var cantPistas = oSettings.hintsOn ? oSettings.hintsCount : 0;
-    activeWordData = getSafeWordObj(rawItem, cantPistas); 
+    activeWordData = getSafeWordObj(rawItem, oSettings.hintsOn ? oSettings.hintsCount : 0); 
+    
     var roles = new Array(oPlayers.length).fill('civil');
     var idxs = Array.from({length:oPlayers.length}, (_,i)=>i);
     idxs.sort(() => Math.random()-0.5);
     for(var i=0; i<oSettings.imps; i++) roles[idxs[i]]='impostor';
-    var startIdx = Math.floor(Math.random()*oPlayers.length);
+    
     oTurnOrder = [];
+    var startIdx = Math.floor(Math.random()*oPlayers.length);
     for(let i=0; i<oPlayers.length; i++) oTurnOrder.push((startIdx+i)%oPlayers.length);
     oTurnIdx = -1; 
     oPlayers.forEach((p, i) => { p.role = roles[i]; p.alive = true; p.hasVoted = false; });
+    
     var gameMap = {};
     oPlayers.forEach(p => {
         gameMap[p.id] = { role: p.role, word: p.role==='impostor' ? '???' : activeWordData.name, hints: activeWordData.hints };
     });
+    
     broadcast({ type: 'START', payload: { map: gameMap, players: oPlayers, settings: oSettings } });
     currentPhase = 'DISCUSS';
     hostNextTurn();
@@ -293,9 +263,10 @@ function hostNextTurn() {
     }
     var p = oPlayers[oTurnOrder[oTurnIdx]];
     if(!p.alive) { hostNextTurn(); return; }
+    
     var time = (currentPhase === 'DISCUSS') ? oSettings.tDisc : oSettings.tVote;
-    var state = { phase: currentPhase, activePlayerId: p.id, timeLeft: time, turnIdx: oTurnIdx, totalTurns: oTurnOrder.length };
-    broadcast({type:'TURN_UPDATE', payload: state});
+    broadcast({type:'TURN_UPDATE', payload: { phase: currentPhase, activePlayerId: p.id, timeLeft: time, turnIdx: oTurnIdx, totalTurns: oTurnOrder.length }});
+    
     clearInterval(oTimerInt);
     if(oSettings.withTime) {
         var left = time;
@@ -353,11 +324,8 @@ function resolveOVotes() {
             var desc = `<span class="text-white font-bold">${p.name}</span> era <span class="${imp?'text-red-500':'text-cyan-400'} font-bold">${imp?'IMPOSTOR':'CIVIL'}</span>`;
             var ic=oPlayers.filter(x=>x.role==='impostor'&&x.alive).length; 
             var cc=oPlayers.filter(x=>x.role==='civil'&&x.alive).length;
-            var resType = 'ELIMINATED';
-            if(ic===0) resType = 'VICTORY_CIVIL';
-            else if(ic>=cc) resType = 'VICTORY_IMP';
-            var resData = { result: resType, desc: desc };
-            broadcast({type:'RESULT', payload: resData}); 
+            var resType = (ic===0) ? 'VICTORY_CIVIL' : (ic>=cc ? 'VICTORY_IMP' : 'ELIMINATED');
+            broadcast({type:'RESULT', payload: { result: resType, desc: desc }}); 
         }
     } else { 
         broadcast({type:'MSG', payload:"Nadie votado."}); 
@@ -368,7 +336,7 @@ function resolveOVotes() {
 function hostCheckGuess(impId, word) {
     var p = oPlayers.find(x => x.id === impId);
     if(!p || p.role !== 'impostor') return;
-    if(word.toLowerCase() === activeWordData.name.toLowerCase()) {
+    if(word.toLowerCase().trim() === activeWordData.name.toLowerCase().trim()) {
         var res = { result: 'VICTORY_IMP', desc: `<span class="text-white font-bold">${p.name}</span> adivinó la palabra secreta:<br><span class="text-green-400 text-xl">${activeWordData.name}</span>` };
         broadcast({type:'RESULT', payload: res});
     } else {
@@ -385,16 +353,19 @@ function renderOGame(payload) {
     var myData = payload.map[socket.id];
     if(!myData) return; 
     if(!isHost) { oSettings = payload.settings; oPlayers = payload.players; }
+    
     document.getElementById('online-role-text').innerText = myData.role==='impostor'?"IMPOSTOR":"CIVIL";
     document.getElementById('online-role-text').className = myData.role==='impostor'?"text-4xl font-bold text-red-500 digital-font mb-2 animate-pulse":"text-4xl font-bold text-cyan-400 digital-font mb-2";
     document.getElementById('online-the-word').innerText = myData.word;
+    
     var hCont = document.getElementById('online-hint-container');
     if(myData.role==='impostor' && oSettings.hintsOn && myData.hints.length>0) {
         document.getElementById('online-imp-cat-hint').innerText = "- " + myData.hints.join("\n- ");
         hCont.classList.remove('hidden');
     } else hCont.classList.add('hidden');
+    
     renderOGrid(payload.players);
-    updateOVoteCounts({});
+    updateOVoteCounts({}); // LIMPIEZA VISUAL AL EMPEZAR
 }
 
 function renderOGrid(l){
@@ -430,14 +401,14 @@ function handleClientTurnUpdate(state) {
 
     skipBtn.classList.add('hidden'); 
     inputArea.classList.add('hidden'); 
-    guessBtn.classList.add('hidden'); // Ocultar por defecto
+    guessBtn.classList.add('hidden'); 
     grid.classList.add('pointer-events-none'); 
 
     if(isMyTurn) {
         skipBtn.classList.remove('hidden'); 
         var myRole = document.getElementById('online-role-text').innerText === "IMPOSTOR" ? 'impostor' : 'civil';
 
-        // ARREGLO AQUÍ: El botón de adivinar aparece independientemente del audio
+        // ARREGLO: EL BOTÓN DE ADIVINAR APARECE SIEMPRE QUE SEA TURNO DEL IMPOSTOR EN DEBATE
         if(myRole === 'impostor' && oSettings.canGuess && state.phase === 'DISCUSS') {
             guessBtn.classList.remove('hidden');
         }
@@ -485,13 +456,33 @@ function toggleOnlineGuess() {
 function handleOnlineGuessInput(e) {
     var val = e.target.value.toLowerCase(), sugg = document.getElementById('online-guess-modal-suggestions');
     sugg.innerHTML = ""; sugg.classList.add('hidden'); if(val.length < 2) return;
-    var list = DB[oSettings.cat] || DB.games; var matches = list.filter(item => item[0].toLowerCase().includes(val));
-    if(matches.length>0) { sugg.classList.remove('hidden'); sugg.innerHTML = matches.slice(0,3).map(m => `<div class="p-3 text-white hover:bg-slate-600 cursor-pointer border-b border-slate-600 last:border-0" onclick="confirmOnlineGuessFromModal('${m[0]}')">${m[0]}</div>`).join(''); }
+    var list = DB[oSettings.cat] || DB.games; 
+    var matches = list.filter(item => {
+        let word = Array.isArray(item) ? item[0] : item;
+        return word.toLowerCase().includes(val);
+    });
+    if(matches.length>0) { 
+        sugg.classList.remove('hidden'); 
+        sugg.innerHTML = matches.slice(0,3).map(m => {
+            let word = Array.isArray(m) ? m[0] : m;
+            return `<div class="p-3 text-white hover:bg-slate-600 cursor-pointer border-b border-slate-600 last:border-0" onclick="confirmOnlineGuessFromModal('${word}')">${word}</div>`;
+        }).join(''); 
+    }
 }
 
+// ARREGLO: AHORA EL CLIC EN SUGERENCIA SOLO LLENA EL CAMPO. HAY QUE DARLE AL BOTÓN PARA CONFIRMAR.
 function confirmOnlineGuessFromModal(val) {
-    var word = val || document.getElementById('online-guess-modal-input').value; if(!word) return;
-    if(isHost) hostCheckGuess(socket.id, word); else broadcast({type:'GUESS_ATTEMPT', payload: { id: socket.id, word: word }});
+    if(val) {
+        document.getElementById('online-guess-modal-input').value = val;
+        document.getElementById('online-guess-modal-suggestions').classList.add('hidden');
+        return; // Detenemos aquí, el usuario debe apretar el botón de "¡Adivinar!" del modal
+    }
+    
+    var word = document.getElementById('online-guess-modal-input').value.trim(); 
+    if(!word) return;
+    
+    if(isHost) hostCheckGuess(socket.id, word); 
+    else broadcast({type:'GUESS_ATTEMPT', payload: { id: socket.id, word: word }});
     toggleOnlineGuess();
 }
 
@@ -532,11 +523,9 @@ function updateClientSettings(s){
     toggleOnlinePanel('time'); toggleOnlinePanel('hint'); toggleOnlinePanel('balanced'); toggleOnlinePanel('guess');
 }
 
-// ARREGLO: Todos pueden ver el botón de continuar
 function handleOResult(d){ 
     if(d.result==='ELIMINATED'){ 
         showResultModal('ELIMINATED','ELIMINADO',d.desc,null,()=>{
-            // Si soy host avanzo la fase, si no, solo cierro mi cartel
             if(isHost) hostPhase('DISCUSS');
             else document.getElementById('result-modal').classList.add('hidden');
         }); 
@@ -547,13 +536,10 @@ function handleOResult(d){
         },()=>{location.reload()}); 
     } 
     
-    // Forzamos que los botones aparezcan para todos después de la animación inicial
     setTimeout(() => {
         document.getElementById('modal-host-controls').classList.remove('hidden');
         document.getElementById('modal-host-controls').classList.add('flex');
         document.getElementById('modal-client-msg').classList.add('hidden');
-        
-        // Hacemos que el botón grande de continuar siempre esté visible en ELIMINADOS
         if(d.result === 'ELIMINATED') {
             document.getElementById('btn-continue-game').classList.remove('hidden');
             document.getElementById('modal-btns-game-over').classList.add('hidden');
@@ -581,4 +567,4 @@ function updateOVoteCounts(v){
 }
 function showOnlineOverlay(text, author, time) { var ov = document.getElementById('online-msg-overlay'); document.getElementById('o-overlay-text').innerText = text; document.getElementById('o-overlay-author').innerText = author; ov.classList.remove('hidden'); setTimeout(() => ov.classList.add('hidden'), time); }
 function kickPlayer(pid){broadcast({type:'KICK', payload: pid}); oPlayers=oPlayers.filter(x=>x.id!==pid); updateLobbyAndSync(); adjOnlineImp(0);}
-function adjOnlineImp(d){var cur=parseInt(document.getElementById('online-imp-count').innerText)+d, max = Math.ceil(oPlayers.length / 2) - 1; if(max < 1) max = 1; if(cur > max) cur = max; if(cur < 1) cur = 1; document.getElementById('online-imp-count').innerText=cur; syncSettings();}
+function adjOnlineImp(d){var cur=parseInt(document.getElementById('online-imp-count').innerText)+d, max = Math.ceil(oPlayers.length / 2) - 1; if(max < 1) max = 1; if(oPlayers.length < 3) max = 1; if(cur > max) cur = max; if(cur < 1) cur = 1; document.getElementById('online-imp-count').innerText=cur; syncSettings();}
