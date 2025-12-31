@@ -451,9 +451,13 @@
                 <input type="text" id="online-chat-input" class="chat-input" placeholder="Escribe aquí..." autocomplete="off">
                 <button onclick="sendOnlineMessage()" class="btn-send">➤</button>
             </div>
-            
-            <button id="btn-online-guess" onclick="toggleOnlineGuess()" class="hidden w-full mt-2 bg-yellow-600/50 border border-yellow-500 text-yellow-200 text-xs py-2 rounded font-bold uppercase hover:bg-yellow-600">🕵️ Adivinar Palabra</button>
         </div>
+        
+        <button id="btn-online-guess" onclick="toggleOnlineGuess()" class="hidden w-full mb-4 bg-yellow-600/50 border border-yellow-500 text-yellow-200 text-xs py-2 rounded font-bold uppercase hover:bg-yellow-600 transition-all shadow-[0_0_10px_rgba(234,179,8,0.3)]">
+            🕵️ Adivinar Palabra
+        </button>
+
+        <p id="online-vote-msg" class="text-center text-xs text-slate-500 font-bold uppercase mb-2">Juego en curso...</p>
 
         <p id="online-vote-msg" class="text-center text-xs text-slate-500 font-bold uppercase mb-2">Juego en curso...</p>
         <div id="online-grid" class="grid grid-cols-2 gap-2 opacity-50 pointer-events-none transition-opacity"></div>
@@ -634,10 +638,16 @@
             
             <div id="modal-host-controls" class="hidden flex-col gap-3">
                 <div id="modal-btns-game-over" class="flex flex-col gap-3">
-                    <button id="btn-replay" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition shadow-lg uppercase text-xl active:scale-95">Volver a Jugar</button>
-                    <button id="btn-exit" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-500 transition shadow-lg uppercase active:scale-95">Cerrar Sala</button>
-                </div>
-                <button id="btn-continue-game" class="hidden w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-500 transition shadow-lg uppercase text-xl active:scale-95">Continuar Partida ➔</button>
+                        <button id="btn-replay" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-500 transition shadow-lg uppercase text-xl active:scale-95">Volver a Jugar</button>
+                        <button id="btn-exit" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-500 transition shadow-lg uppercase active:scale-95">Cerrar Sala</button>
+                        </div>
+                    </div>
+
+                    <button id="btn-continue-game" class="hidden w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-500 transition shadow-lg uppercase text-xl active:scale-95 mt-3">Continuar Partida ➔</button>
+
+            <div id="modal-client-msg" class="hidden">
+                <p class="text-yellow-400 animate-pulse font-bold tracking-widest uppercase text-sm">⏳ Esperando al Host...</p>
+                <button onclick="location.reload()" class="mt-6 text-xs text-red-400 hover:text-red-300 underline">Salir de la sala</button>
             </div>
 
             <div id="modal-client-msg" class="hidden">

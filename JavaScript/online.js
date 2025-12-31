@@ -168,7 +168,13 @@ function updateLobbyAndSync() {
 function handleClientLogic(d) {
     if (d.type === 'LOBBY_UPDATE') {
         oPlayers = d.payload; 
-        renderCLobby(oPlayers);
+        if (isHost) {
+            renderOLobby(); 
+        } else {
+            renderCLobby(oPlayers);
+        }
+        
+        document.getElementById('online-status').innerText = "Conectado al Lobby";
     }
     else if (d.type === 'SYNC') {
         updateClientSettings(d.payload);

@@ -260,11 +260,12 @@ function showSystemConfirm(title, msg, onConfirm) {
 // ==========================================
 // 5. MODAL DE RESULTADOS (VISIBILIDAD GARANTIZADA)
 // ==========================================
+// BUSCÁ LA FUNCIÓN showResultModal Y REEMPLAZALA POR ESTA:
+
 function showResultModal(type, title, desc, onReplay, onContinue) {
     var m=document.getElementById('result-modal'), cd=document.getElementById('modal-countdown'), cnt=document.getElementById('modal-content'), num=document.getElementById('count-num');
     m.classList.remove('hidden'); cd.classList.remove('hidden'); cnt.classList.add('hidden');
     
-    // Detener timers
     if(window.clT) clearInterval(window.clT);
     if(window.lInt) clearInterval(window.lInt);
     
@@ -277,7 +278,6 @@ function showResultModal(type, title, desc, onReplay, onContinue) {
         else {
             clearInterval(window.mInt); cd.classList.add('hidden'); cnt.classList.remove('hidden');
             
-            // 1. Contenido General (Visible para todos)
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-desc').innerHTML = desc;
             
@@ -288,38 +288,48 @@ function showResultModal(type, title, desc, onReplay, onContinue) {
             else if(type==='VICTORY_IMP'){ico.innerText='🔪'; tit.className="text-3xl font-bold mb-4 text-red-500 digital-font";}
             else {ico.innerText='💀'; tit.className="text-3xl font-bold mb-4 text-slate-300 digital-font";}
 
-            // 2. Control de Botones (Host vs Cliente)
+            // --- LÓGICA DE BOTONES CORREGIDA ---
             var hostControls = document.getElementById('modal-host-controls');
             var clientMsg = document.getElementById('modal-client-msg');
-            
+            var btnCont = document.getElementById('btn-continue-game'); // Botón fuera del contenedor host
             var isOnline = !document.getElementById('online-game').classList.contains('hidden');
             var amIHost = isOnline ? (window.isHost === true) : true;
 
-            if(amIHost) {
-                if(hostControls) { hostControls.classList.remove('hidden'); hostControls.classList.add('flex'); }
-                if(clientMsg) clientMsg.classList.add('hidden');
-                
-                var btnReplay = document.getElementById('btn-replay');
-                var btnExit = document.getElementById('btn-exit');
-                var btnCont = document.getElementById('btn-continue-game');
-                var btnsGameOver = document.getElementById('modal-btns-game-over');
-
-                if(type === 'ELIMINATED') {
-                    if(btnsGameOver) btnsGameOver.classList.add('hidden');
-                    if(btnCont) {
-                        btnCont.classList.remove('hidden');
-                        btnCont.onclick = function() { m.classList.add('hidden'); if(onContinue) onContinue(); };
-                    }
-                } else {
-                    if(btnsGameOver) btnsGameOver.classList.remove('hidden');
-                    if(btnCont) btnCont.classList.add('hidden');
-                    if(btnReplay) btnReplay.onclick = function() { m.classList.add('hidden'); if(onReplay) onReplay(); };
-                    if(btnExit) btnExit.onclick = function() { location.reload(); };
+            // 1. CONFIGURAR BOTÓN CONTINUAR (PARA TODOS)
+            // Si es eliminación, habilitamos el botón para cualquiera
+            if(type === 'ELIMINATED') {
+                if(btnCont) {
+                    btnCont.classList.remove('hidden');
+                    // ¡ACÁ ESTABA EL ERROR! Ahora le asignamos el click a todos, no solo al host
+                    btnCont.onclick = function() { 
+                        m.classList.add('hidden'); 
+                        if(onContinue) onContinue(); 
+                    };
                 }
+                // Ocultamos controles de fin de partida (volver/salir)
+                if(document.getElementById('modal-btns-game-over')) 
+                    document.getElementById('modal-btns-game-over').classList.add('hidden');
+                
+                // Ocultamos mensaje de espera
+                if(clientMsg) clientMsg.classList.add('hidden');
+            
             } else {
-                // Cliente: Muestra mensaje de espera, pero el modal (título y desc) sigue visible
-                if(hostControls) { hostControls.classList.add('hidden'); hostControls.classList.remove('flex'); }
-                if(clientMsg) clientMsg.classList.remove('hidden');
+                // 2. CONFIGURAR FINAL DE PARTIDA (SOLO HOST CONTROLA)
+                if(btnCont) btnCont.classList.add('hidden'); // Ocultar continuar
+                
+                if(amIHost) {
+                    if(hostControls) { hostControls.classList.remove('hidden'); hostControls.classList.add('flex'); }
+                    if(document.getElementById('modal-btns-game-over')) 
+                        document.getElementById('modal-btns-game-over').classList.remove('hidden');
+                    
+                    document.getElementById('btn-replay').onclick = function() { m.classList.add('hidden'); if(onReplay) onReplay(); };
+                    document.getElementById('btn-exit').onclick = function() { location.reload(); };
+                    if(clientMsg) clientMsg.classList.add('hidden');
+                } else {
+                    // Cliente esperando que el host decida en Game Over
+                    if(hostControls) { hostControls.classList.add('hidden'); hostControls.classList.remove('flex'); }
+                    if(clientMsg) clientMsg.classList.remove('hidden');
+                }
             }
         }
     }, 1000);
